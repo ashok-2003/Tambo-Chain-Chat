@@ -5,8 +5,8 @@ import { Send, Sparkles, User, Bot } from "lucide-react";
 import { GenerativeCard } from "./GenerativeCard";
 
 const EXAMPLES = [
-    { label: "Analyze my portfolio risk", query: "Check my portfolio risk vs market", type: "risk" as const },
-    { label: "Show weekly performance", query: "Graph my ETH performance over the last week", type: "chart" as const },
+    { label: "Why is it up?", query: "Analyze what drove this 3.2% growth", type: "chart" as const },
+    { label: "Check risks", query: "Any new risks in my portfolio?", type: "risk" as const },
 ];
 
 export function DemoChat() {
@@ -83,7 +83,7 @@ export function DemoChat() {
                         </div>
                         <div className="space-y-2">
                             <div className="bg-secondary/10 p-3 rounded-r-lg rounded-bl-lg text-sm text-foreground/90">
-                                Hi! Connect your wallet or tell me what to simulate.
+                                Welcome back! Your portfolio is up 3.2% today.
                             </div>
                             {step === "idle" && (
                                 <div className="flex gap-2 flex-wrap animate-fade-in">
@@ -162,6 +162,6 @@ export function DemoChat() {
             <div className='text-center mt-4 text-sm text-muted-foreground animate-pulse'>
                 Live Preview (Auto-playing)
             </div>
-        </div>
+        </div >
     );
 }
