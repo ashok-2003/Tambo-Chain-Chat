@@ -5,6 +5,7 @@ import { useMcpServers } from "@/components/tambo/mcp-config-modal";
 import { components, tools } from "@/lib/tambo";
 import { TamboProvider } from "@tambo-ai/react";
 import { Header } from "@/components/tambo/header";
+import * as React from "react";
 
 /**
  * Home page component that renders the Tambo chat interface.
@@ -16,13 +17,20 @@ import { Header } from "@/components/tambo/header";
 export default function Home() {
   // Load MCP server configurations
   const mcpServers = useMcpServers();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <TamboProvider
-      apiKey="proxied"
+      apiKey={process.env.NEXT_PUBLIC_TAMBO_API_KEY!}
       components={components}
       tools={tools}
-      tamboUrl="/api/tambo"
+      tamboUrl={process.env.NEXT_PUBLIC_TAMBO_URL!}
       mcpServers={mcpServers}
     >
       <div className="flex flex-col h-screen bg-background overflow-hidden selection:bg-primary/20">

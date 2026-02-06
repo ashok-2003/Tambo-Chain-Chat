@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const TAMBO_BASE_URL =
-  process.env.TAMBO_URL || "https://api.tambo.ai";
+  process.env.TAMBO_URL || "https://api.tambo.co";
 
 export async function POST(
   request: NextRequest,
@@ -39,7 +39,16 @@ export async function POST(
       body,
     });
 
-    // Handle streaming responses
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Tambo API Error:", response.status, targetUrl);
+      console.error("Error Details:", errorText);
+      try {
+        return NextResponse.json(JSON.parse(errorText), { status: response.status });
+      } catch {
+        return new NextResponse(errorText, { status: response.status });
+      }
+    }
     if (response.headers.get("content-type")?.includes("text/event-stream")) {
       return new NextResponse(response.body, {
         status: response.status,
