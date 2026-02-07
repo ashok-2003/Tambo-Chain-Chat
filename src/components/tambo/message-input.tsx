@@ -44,6 +44,8 @@ import {
   type ResourceItem,
   type TamboEditor,
 } from "./text-editor";
+import { parseSlashCommand, SLASH_COMMANDS } from "@/lib/slash-commands";
+import { useRouter } from "next/navigation";
 
 // Lazy load DictationButton for code splitting (framework-agnostic alternative to next/dynamic)
 // eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -158,17 +160,17 @@ function useCombinedResourceList(
     () =>
       mcpResources
         ? (
-            mcpResources as {
-              resource: { uri: string; name?: string };
-            }[]
-          ).map((entry) => ({
-            // Use the full URI (already includes serverKey prefix from MCP hook)
-            // When inserted as @{id}, parseResourceReferences will strip serverKey before sending to backend
-            id: entry.resource.uri,
-            name: entry.resource.name ?? entry.resource.uri,
-            icon: React.createElement(AtSign, { className: "w-4 h-4" }),
-            componentData: { type: "mcp-resource", data: entry },
-          }))
+          mcpResources as {
+            resource: { uri: string; name?: string };
+          }[]
+        ).map((entry) => ({
+          // Use the full URI (already includes serverKey prefix from MCP hook)
+          // When inserted as @{id}, parseResourceReferences will strip serverKey before sending to backend
+          id: entry.resource.uri,
+          name: entry.resource.name ?? entry.resource.uri,
+          icon: React.createElement(AtSign, { className: "w-4 h-4" }),
+          componentData: { type: "mcp-resource", data: entry },
+        }))
         : [],
     [mcpResources],
   );
@@ -233,11 +235,11 @@ function useCombinedPromptList(
     () =>
       mcpPrompts
         ? (mcpPrompts as { prompt: { name: string } }[]).map((entry) => ({
-            id: `mcp-prompt:${entry.prompt.name}`,
-            name: entry.prompt.name,
-            icon: React.createElement(FileText, { className: "w-4 h-4" }),
-            text: "", // Text will be fetched when selected via useTamboMcpPrompt
-          }))
+          id: `mcp-prompt:${entry.prompt.name}`,
+          name: entry.prompt.name,
+          icon: React.createElement(FileText, { className: "w-4 h-4" }),
+          text: "", // Text will be fetched when selected via useTamboMcpPrompt
+        }))
         : [],
     [mcpPrompts],
   );
@@ -465,6 +467,7 @@ const MessageInputInternal = React.forwardRef<
   const [isDragging, setIsDragging] = React.useState(false);
   const editorRef = React.useRef<TamboEditor>(null!);
   const dragCounter = React.useRef(0);
+  const router = useRouter();
 
   // Use elicitation context (optional)
   const { elicitation, resolveElicitation } = useTamboElicitationContext();
@@ -502,6 +505,29 @@ const MessageInputInternal = React.forwardRef<
       if (editor) {
         const extracted = editor.getTextWithResourceURIs();
         latestResourceNames = extracted.resourceNames;
+      }
+
+      // Check for slash command
+      const command = parseSlashCommand(value);
+      if (command && SLASH_COMMANDS[command.commandName]) {
+        try {
+          await SLASH_COMMANDS[command.commandName].execute(command.args, {
+            reload: () => window.location.reload(),
+            navigate: (url) => router.push(url),
+          });
+          setValue("");
+          setDisplayValue("");
+          storeValueInSessionStorage(thread.id);
+          setIsSubmitting(false);
+          return;
+        } catch (error) {
+          console.error("Failed to execute slash command:", error);
+          setSubmitError(
+            error instanceof Error ? error.message : "Failed to execute command",
+          );
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       const imageIdsAtSubmitTime = images.map((image) => image.id);
@@ -667,7 +693,7 @@ const MessageInputInternal = React.forwardRef<
       <form
         ref={ref}
         onSubmit={handleSubmit}
-        className={cn(messageInputVariants({ variant }), className)}
+        className={cn(messageInputVariants({ variant }), className, "print:hidden")}
         data-slot="message-input-form"
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
@@ -891,7 +917,7 @@ const MessageInputTextarea = ({
         resources={resourceItems}
         onSearchPrompts={setPromptSearch}
         prompts={promptItems}
-        onResourceSelect={onResourceSelect ?? (() => {})}
+        onResourceSelect={onResourceSelect ?? (() => { })}
         onPromptSelect={handlePromptSelect}
       />
     </div>
@@ -1609,3 +1635,19 @@ export {
 
 // Re-export types from text-editor for convenience
 export type { PromptItem, ResourceItem } from "./text-editor";
+
+/**
+ * Button to toggle dictation.
+ * @component MessageInput.DictationButton
+ */
+export const MessageInputDictationButton = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+  return (
+    <div ref={ref} className={className} {...props}>
+      <DictationButton />
+    </div>
+  );
+});
+MessageInputDictationButton.displayName = "MessageInputDictationButton";

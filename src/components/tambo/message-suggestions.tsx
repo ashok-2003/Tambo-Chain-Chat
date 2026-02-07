@@ -159,7 +159,7 @@ const MessageSuggestions = React.forwardRef<
           clearTimeout(loadingTimeoutRef.current);
         }
 
-        loadingTimeoutRef.current = setTimeout(() => {}, 5000);
+        loadingTimeoutRef.current = setTimeout(() => { }, 5000);
       }
 
       return () => {
@@ -205,7 +205,7 @@ const MessageSuggestions = React.forwardRef<
         <TooltipProvider>
           <div
             ref={ref}
-            className={cn("px-4 pb-2", className)}
+            className={cn("px-4 pb-2 print:hidden", className)}
             data-slot="message-suggestions-container"
             {...props}
           >
@@ -346,45 +346,45 @@ const MessageSuggestionsList = React.forwardRef<
     >
       {suggestions.length > 0
         ? suggestions.map((suggestion, index) => (
-            <Tooltip
-              key={suggestion.id}
-              content={
-                <span suppressHydrationWarning>
-                  {modKey}+{altKey}+{index + 1}
-                </span>
+          <Tooltip
+            key={suggestion.id}
+            content={
+              <span suppressHydrationWarning>
+                {modKey}+{altKey}+{index + 1}
+              </span>
+            }
+            side="top"
+          >
+            <button
+              className={cn(
+                "py-2 px-2.5 rounded-2xl text-xs transition-colors",
+                "border border-flat",
+                getSuggestionButtonClassName({
+                  isGenerating,
+                  isSelected: selectedSuggestionId === suggestion.id,
+                }),
+              )}
+              onClick={async () =>
+                !isGenerating && (await accept({ suggestion }))
               }
-              side="top"
+              disabled={isGenerating}
+              data-suggestion-id={suggestion.id}
+              data-suggestion-index={index}
             >
-              <button
-                className={cn(
-                  "py-2 px-2.5 rounded-2xl text-xs transition-colors",
-                  "border border-flat",
-                  getSuggestionButtonClassName({
-                    isGenerating,
-                    isSelected: selectedSuggestionId === suggestion.id,
-                  }),
-                )}
-                onClick={async () =>
-                  !isGenerating && (await accept({ suggestion }))
-                }
-                disabled={isGenerating}
-                data-suggestion-id={suggestion.id}
-                data-suggestion-index={index}
-              >
-                <span className="font-medium">{suggestion.title}</span>
-              </button>
-            </Tooltip>
-          ))
+              <span className="font-medium">{suggestion.title}</span>
+            </button>
+          </Tooltip>
+        ))
         : // Render placeholder buttons when no suggestions are available
-          placeholders.map((_, index) => (
-            <div
-              key={`placeholder-${index}`}
-              className="py-2 px-2.5 rounded-2xl text-xs border border-flat bg-muted/20 text-transparent animate-pulse"
-              data-placeholder-index={index}
-            >
-              <span className="invisible">Placeholder</span>
-            </div>
-          ))}
+        placeholders.map((_, index) => (
+          <div
+            key={`placeholder-${index}`}
+            className="py-2 px-2.5 rounded-2xl text-xs border border-flat bg-muted/20 text-transparent animate-pulse"
+            data-placeholder-index={index}
+          >
+            <span className="invisible">Placeholder</span>
+          </div>
+        ))}
     </div>
   );
 });
