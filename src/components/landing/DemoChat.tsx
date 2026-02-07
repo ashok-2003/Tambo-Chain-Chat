@@ -49,7 +49,7 @@ export function DemoChat() {
     const currentExample = EXAMPLES[activeExample];
 
     return (
-        <div className="w-full max-w-2xl mx-auto mt-4">
+        <div className="w-full max-w-4xl mx-auto mt-4">
             <div className="relative bg-card border border-border/80 dark:border-border rounded-2xl shadow-xl shadow-black/[0.04] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col min-h-[420px] transition-all duration-500">
 
                 {/* Terminal-style header */}
@@ -159,9 +159,6 @@ export function DemoChat() {
                 </div>
             </div>
 
-            <div className="text-center mt-5 text-[10px] text-muted-foreground/60 font-mono tracking-[0.2em] uppercase">
-                Live Preview &middot; Auto-Playing
-            </div>
         </div>
     );
 }

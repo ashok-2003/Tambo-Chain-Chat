@@ -11,16 +11,16 @@ export function Header() {
             {/* Left: Logo & Market */}
             <div className="flex items-center gap-5">
                 <a href="/" className="flex items-center gap-2.5 group">
-                    <div className="w-7 h-7 rounded-lg overflow-hidden transition-transform duration-200 group-hover:scale-105">
+                    <div className="w-10 h-6 rounded-sm overflow-hidden transition-transform duration-200 group-hover:scale-105">
                         <img
                             src="/logos/Gemini_Generated_Image_m8vxwvm8vxwvm8vx.svg"
                             alt="ChainChat"
                             className="w-full h-full object-cover"
                         />
                     </div>
-                    <span className="text-sm font-semibold tracking-[-0.01em] text-foreground">
+                    {/* <span className="text-sm font-semibold tracking-[-0.01em] text-foreground">
                         ChainChat
-                    </span>
+                    </span> */}
                 </a>
 
                 <div className="hidden md:flex items-center">
