@@ -27,6 +27,10 @@ import {
   AllocationBreakdown,
   allocationBreakdownSchema,
 } from "@/components/tambo/insight/allocation-breakdown";
+import {
+  NewsFeed,
+  newsFeedSchema,
+} from "@/components/tambo/generative/news-feed";
 
 import type { TamboComponent } from "@tambo-ai/react";
 import { TamboTool } from "@tambo-ai/react";
@@ -96,5 +100,11 @@ export const components: TamboComponent[] = [
       "A donut chart showing asset allocation percentages.",
     component: AllocationBreakdown,
     propsSchema: allocationBreakdownSchema,
+  },
+  {
+    name: "NewsFeed",
+    description: "A scrolling feed of trending news for specific crypto topics. Use this when the user asks for 'news', 'latest updates', or 'what is happening' with a specific coin.",
+    component: NewsFeed,
+    propsSchema: newsFeedSchema,
   },
 ];
