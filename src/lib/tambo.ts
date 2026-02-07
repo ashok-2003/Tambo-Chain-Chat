@@ -36,6 +36,9 @@ import type { TamboComponent } from "@tambo-ai/react";
 import { TamboTool } from "@tambo-ai/react";
 import { z } from "zod";
 
+import { cryptoPriceTool } from "@/lib/tools/crypto-price";
+import { newsTool } from "@/lib/tools/news";
+
 /**
  * tools
  *
@@ -45,8 +48,8 @@ import { z } from "zod";
  */
 
 export const tools: TamboTool[] = [
-
-  // Add more tools here
+  cryptoPriceTool,
+  newsTool,
 ];
 
 

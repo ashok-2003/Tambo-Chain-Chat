@@ -7,6 +7,7 @@ import {
   MessageInputFileButton,
   MessageInputMcpPromptButton,
   MessageInputMcpResourceButton,
+  MessageInputDictationButton,
   MessageInputSubmitButton,
   MessageInputTextarea,
   MessageInputToolbar,
@@ -17,7 +18,8 @@ import {
   MessageSuggestionsStatus,
 } from "@/components/tambo/message-suggestions";
 import { ScrollableMessageContainer } from "@/components/tambo/scrollable-message-container";
-import { MessageInputMcpConfigButton } from "@/components/tambo/message-input";
+
+import { ChatExportMenu } from "@/components/tambo/chat-export";
 import { ThreadContainer, useThreadContainerContext } from "./thread-container";
 import {
   ThreadContent,
@@ -86,6 +88,9 @@ export const MessageThreadFull = React.forwardRef<
         className={className}
         {...props}
       >
+        <div className="flex justify-end px-4 py-2 print:hidden">
+          <ChatExportMenu />
+        </div>
         <ScrollableMessageContainer className="p-5">
           <ThreadContent variant={variant}>
             <ThreadContentMessages />
@@ -103,7 +108,7 @@ export const MessageThreadFull = React.forwardRef<
               <MessageInputFileButton />
               <MessageInputMcpPromptButton />
               <MessageInputMcpResourceButton />
-              <MessageInputMcpConfigButton />
+              <MessageInputDictationButton />
               <MessageInputSubmitButton />
             </MessageInputToolbar>
             <MessageInputError />

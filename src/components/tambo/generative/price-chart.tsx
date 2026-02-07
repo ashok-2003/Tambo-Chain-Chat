@@ -1,10 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { z } from "zod";
-import { Activity } from "lucide-react";
+import { Activity, BarChart2, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { coingeckoService } from "@/services/coingecko";
+import { useState } from "react";
 
 export const priceChartSchema = z.object({
     tokens: z.array(z.string()).describe("List of token IDs (e.g., ['bitcoin', 'ethereum'])"),
@@ -14,8 +16,84 @@ export const priceChartSchema = z.object({
 
 export type PriceChartProps = z.infer<typeof priceChartSchema>;
 
+interface ChartDataPoint {
+    date: string;
+    // For line chart
+    [key: string]: number | string | any;
+}
+
+interface OHLCDataPoint {
+    date: string;
+    timestamp: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+}
+
+const Candlestick = (props: any) => {
+    const {
+        x,
+        y,
+        width,
+        height,
+    } = props;
+
+    // access data from payload
+    const { open, close, high, low } = props.payload;
+
+    const isGrowing = close > open;
+    const color = isGrowing ? "#10b981" : "#ef4444";
+    // Ratio is chart pixel height / value range
+    // Since Bar with [min, max] maps y to max and height to (max-min)
+    // We can trust y and height passed by Bar for range [low, high]
+    // height corresponds to (high - low)
+    const ratio = height / (high - low);
+
+    return (
+        <g stroke={color} fill={color} strokeWidth="2">
+            <path
+                d={`
+          M ${x + width / 2}, ${y}
+          L ${x + width / 2}, ${y + height}
+        `}
+            />
+            {/* Body */}
+            <rect
+                x={x + width * 0.25}
+                y={isGrowing ? y + (high - close) * ratio : y + (high - open) * ratio}
+                width={width * 0.5}
+                height={Math.max(2, Math.abs(open - close) * ratio)}
+                stroke="none"
+            />
+        </g>
+    );
+};
+
 export function PriceChart({ tokens = [], timeframe = "7", title }: PriceChartProps) {
+    const [chartType, setChartType] = useState<'line' | 'candle'>('line');
+
     const fetchPriceHistory = async () => {
+        // If single token and candle mode, fetch OHLC
+        if (tokens.length === 1 && chartType === 'candle') {
+            const data = await coingeckoService.getOHLC(tokens[0], timeframe);
+            if (!data) throw new Error("Failed to fetch OHLC data");
+
+            return data.map(([timestamp, open, high, low, close]) => ({
+                date: new Date(timestamp).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: timeframe === '1' ? '2-digit' : undefined
+                }),
+                timestamp,
+                open,
+                high,
+                low,
+                close,
+                range: [low, high] // Add range for Bar chart
+            }));
+        }
+
         const promises = tokens.map(token => coingeckoService.getPriceHistory(token, timeframe));
         const results = await Promise.all(promises);
 
@@ -44,7 +122,7 @@ export function PriceChart({ tokens = [], timeframe = "7", title }: PriceChartPr
     };
 
     const { data: chartData = [], isLoading: loading, error, isError } = useQuery({
-        queryKey: ['priceHistory', tokens, timeframe],
+        queryKey: ['priceHistory', tokens, timeframe, chartType],
         queryFn: fetchPriceHistory,
         enabled: tokens.length > 0,
         refetchOnWindowFocus: false,
@@ -74,8 +152,19 @@ export function PriceChart({ tokens = [], timeframe = "7", title }: PriceChartPr
         );
     }
 
-    const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
-    const rawColors = ["#d4956a", "#60a5fa", "#a78bfa", "#34d399", "#fbbf24"];
+    const colors = ["#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#3b82f6"];
+    const isSingleToken = tokens.length === 1;
+
+    // Calculate domain for candlestick to zoom in
+    const getDomain = () => {
+        if (chartType !== 'candle' || !isSingleToken) return ['auto', 'auto'];
+        const lows = (chartData as OHLCDataPoint[]).map(d => d.low);
+        const highs = (chartData as OHLCDataPoint[]).map(d => d.high);
+        const min = Math.min(...lows);
+        const max = Math.max(...highs);
+        const padding = (max - min) * 0.1;
+        return [min - padding, max + padding];
+    };
 
     return (
         <div className="w-full p-6 rounded-xl border border-border bg-card shadow-sm">
@@ -84,73 +173,151 @@ export function PriceChart({ tokens = [], timeframe = "7", title }: PriceChartPr
                     <h3 className="font-semibold text-base leading-none mb-1.5">{title || "Market Performance"}</h3>
                     <p className="text-xs text-muted-foreground font-mono">{timeframe}D HISTORY</p>
                 </div>
-                <div className="flex gap-2">
-                    {tokens.map((t, i) => (
-                        <div key={t} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50 text-xs font-medium">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: rawColors[i % rawColors.length] }} />
-                            <span className="capitalize">{t}</span>
+                <div className="flex items-center gap-2">
+                    {isSingleToken && (
+                        <div className="flex bg-muted/50 rounded-lg p-1 border border-border/50 mr-2">
+                            <button
+                                onClick={() => setChartType('line')}
+                                className={cn(
+                                    "p-1.5 rounded-md transition-all",
+                                    chartType === 'line' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                                )}
+                                title="Line Chart"
+                            >
+                                <TrendingUp size={16} />
+                            </button>
+                            <button
+                                onClick={() => setChartType('candle')}
+                                className={cn(
+                                    "p-1.5 rounded-md transition-all",
+                                    chartType === 'candle' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                                )}
+                                title="Candlestick Chart"
+                            >
+                                <BarChart2 size={16} />
+                            </button>
                         </div>
-                    ))}
+                    )}
+
+                    <div className="flex gap-2">
+                        {tokens.map((t, i) => (
+                            <div key={t} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border/50 text-xs font-medium transition-colors hover:bg-muted">
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                                <span className="capitalize">{t}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
             <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                        <defs>
-                            {tokens.map((token, index) => (
-                                <linearGradient key={token} id={`color-${token}`} x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={rawColors[index % rawColors.length]} stopOpacity={0.15} />
-                                    <stop offset="95%" stopColor={rawColors[index % rawColors.length]} stopOpacity={0} />
-                                </linearGradient>
-                            ))}
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
-                        <XAxis
-                            dataKey="date"
-                            fontSize={10}
-                            tickLine={false}
-                            axisLine={false}
-                            minTickGap={40}
-                            tick={{ fill: 'var(--muted-foreground)', fontFamily: 'var(--font-mono)' }}
-                            dy={10}
-                        />
-                        <YAxis
-                            domain={['auto', 'auto']}
-                            fontSize={10}
-                            tickLine={false}
-                            axisLine={false}
-                            tickFormatter={(val) => `$${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                            tick={{ fill: 'var(--muted-foreground)', fontFamily: 'var(--font-mono)' }}
-                        />
-                        <Tooltip
-                            contentStyle={{
-                                borderRadius: "8px",
-                                border: "1px solid var(--border)",
-                                backgroundColor: "var(--popover)",
-                                color: "var(--popover-foreground)",
-                                boxShadow: "0 4px 16px -4px rgba(0,0,0,0.2)",
-                                fontSize: "12px",
-                                fontFamily: "var(--font-mono)",
-                            }}
-                            itemStyle={{ fontSize: "11px", fontWeight: 500 }}
-                            labelStyle={{ color: "var(--muted-foreground)", fontSize: "10px", marginBottom: "4px" }}
-                            cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 4", opacity: 0.3 }}
-                        />
-                        {tokens.map((token, index) => (
-                            <Area
-                                key={token}
-                                type="monotone"
-                                dataKey={token}
-                                stroke={rawColors[index % rawColors.length]}
-                                strokeWidth={1.5}
-                                fillOpacity={1}
-                                fill={`url(#color-${token})`}
-                                activeDot={{ r: 3, strokeWidth: 0, fill: rawColors[index % rawColors.length] }}
-                                animationDuration={1200}
-                                animationEasing="ease-out"
+                    {chartType === 'candle' && isSingleToken ? (
+                        <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.1} vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                fontSize={11}
+                                tickLine={false}
+                                axisLine={false}
+                                minTickGap={40}
+                                tick={{ fill: 'var(--muted-foreground)' }}
+                                dy={10}
                             />
-                        ))}
-                    </AreaChart>
+                            <YAxis
+                                domain={getDomain() as any}
+                                fontSize={11}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(val) => `$${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                                tick={{ fill: 'var(--muted-foreground)' }}
+                            />
+                            <Tooltip
+                                content={({ active, payload, label }) => {
+                                    if (active && payload && payload.length) {
+                                        const data = payload[0].payload;
+                                        return (
+                                            <div className="rounded-xl border border-border bg-popover text-popover-foreground shadow-lg p-3 text-xs">
+                                                <div className="text-muted-foreground mb-2">{label}</div>
+                                                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                                    <span className="text-muted-foreground">Open:</span>
+                                                    <span className="font-mono font-medium">${data.open.toLocaleString()}</span>
+                                                    <span className="text-muted-foreground">High:</span>
+                                                    <span className="font-mono font-medium text-emerald-500">${data.high.toLocaleString()}</span>
+                                                    <span className="text-muted-foreground">Low:</span>
+                                                    <span className="font-mono font-medium text-red-500">${data.low.toLocaleString()}</span>
+                                                    <span className="text-muted-foreground">Close:</span>
+                                                    <span className="font-mono font-medium">${data.close.toLocaleString()}</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                }}
+                            />
+                            <Bar
+                                dataKey="range" // Use range [low, high]
+                                shape={<Candlestick />}
+                                animationDuration={1500}
+                                animationEasing="ease-out"
+                            >
+                            </Bar>
+                        </ComposedChart>
+                    ) : (
+                        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <defs>
+                                {tokens.map((token, index) => (
+                                    <linearGradient key={token} id={`color-${token}`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={colors[index % colors.length]} stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor={colors[index % colors.length]} stopOpacity={0} />
+                                    </linearGradient>
+                                ))}
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.1} vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                fontSize={11}
+                                tickLine={false}
+                                axisLine={false}
+                                minTickGap={40}
+                                tick={{ fill: 'var(--muted-foreground)' }}
+                                dy={10}
+                            />
+                            <YAxis
+                                domain={['auto', 'auto']}
+                                fontSize={11}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(val) => `$${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                                tick={{ fill: 'var(--muted-foreground)' }}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    borderRadius: "12px",
+                                    border: "1px solid var(--border)",
+                                    backgroundColor: "var(--popover)",
+                                    color: "var(--popover-foreground)",
+                                    boxShadow: "0 10px 30px -10px rgba(0,0,0,0.5)"
+                                }}
+                                itemStyle={{ fontSize: "12px", fontWeight: 500 }}
+                                labelStyle={{ color: "var(--muted-foreground)", fontSize: "11px", marginBottom: "4px" }}
+                                cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 4", opacity: 0.5 }}
+                            />
+                            {tokens.map((token, index) => (
+                                <Area
+                                    key={token}
+                                    type="monotone"
+                                    dataKey={token}
+                                    stroke={colors[index % colors.length]}
+                                    strokeWidth={2}
+                                    fillOpacity={1}
+                                    fill={`url(#color-${token})`}
+                                    activeDot={{ r: 4, strokeWidth: 0, fill: colors[index % colors.length] }}
+                                    animationDuration={1500}
+                                    animationEasing="ease-out"
+                                />
+                            ))}
+                        </AreaChart>
+                    )}
                 </ResponsiveContainer>
             </div>
         </div>

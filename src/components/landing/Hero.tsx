@@ -40,7 +40,7 @@ export function Hero() {
                         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                     </a>
                     <a
-                        href="https://github.com/yourusername/chainchat"
+                        href="https://github.com/ashok-2003/Tambo-Chain-Chat"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-medium text-sm border border-border text-foreground/80 hover:text-foreground hover:border-foreground/20 hover:bg-muted/50 transition-all duration-200"
