@@ -13,9 +13,11 @@
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-popover": "^1.1.15",
+    "@rainbow-me/rainbowkit": "^2.2.10",
     "@tailwindcss/oxide": "^4.1.17",
     "@tambo-ai/react": "^0.70.0",
     "@tambo-ai/typescript-sdk": "^0.84.0",
+    "@tanstack/react-query": "^5.90.20",
     "@tiptap/extension-document": "^3.17.1",
     "@tiptap/extension-hard-break": "^3.17.1",
     "@tiptap/extension-mention": "^3.17.1",
@@ -37,7 +39,9 @@
     "react-markdown": "^10.1.0",
     "recharts": "^3.5.0",
     "streamdown": "^1.6.7",
-    "use-debounce": "^10.1.0"
+    "use-debounce": "^10.1.0",
+    "viem": "^2.45.1",
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",

@@ -2,7 +2,8 @@
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MarketStatus } from "./market-status";
-import { Wallet, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export function Header() {
     return (
@@ -33,10 +34,7 @@ export function Header() {
                 </button>
 
                 {/* Wallet Connection Mock */}
-                <button className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all duration-300 group">
-                    <Wallet className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-primary/80 group-hover:text-primary">Connect</span>
-                </button>
+                <ConnectButton />
 
                 <div className="h-6 w-px bg-border/50 mx-2" />
 
