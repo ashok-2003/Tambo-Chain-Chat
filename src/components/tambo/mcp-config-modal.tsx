@@ -9,11 +9,37 @@ import {
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { type McpServerInfo, MCPTransport } from "@tambo-ai/react";
-import { motion } from "framer-motion";
-import { ChevronDown, Trash2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronDown,
+  Trash2,
+  X,
+  Activity,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  RefreshCw,
+  Box,
+} from "lucide-react";
 import React from "react";
 import { createPortal } from "react-dom";
 import { Streamdown } from "streamdown";
+
+// Types for health check and tools
+type Tool = {
+  name: string;
+  description?: string;
+};
+
+type ServerHealth = {
+  status: "online" | "offline" | "error" | "checking";
+  latency?: number;
+  lastChecked?: number;
+  error?: string;
+  tools?: Tool[];
+};
+
+type ServerHealthMap = Record<string, ServerHealth>;
 
 /**
  * Modal component for configuring client-side MCP (Model Context Protocol) servers.
@@ -48,10 +74,18 @@ export const McpConfigModal = ({
   const [serverUrl, setServerUrl] = React.useState("");
   const [serverName, setServerName] = React.useState("");
   const [transportType, setTransportType] = React.useState<MCPTransport>(
-    MCPTransport.HTTP,
+    MCPTransport.HTTP
   );
   const [savedSuccess, setSavedSuccess] = React.useState(false);
   const [showInstructions, setShowInstructions] = React.useState(false);
+
+  // New state for health and tools
+  const [serverHealths, setServerHealths] = React.useState<ServerHealthMap>({});
+  const [isTestLoading, setIsTestLoading] = React.useState(false);
+  const [testResult, setTestResult] = React.useState<ServerHealth | null>(null);
+  const [expandedServers, setExpandedServers] = React.useState<Set<number>>(
+    new Set()
+  );
 
   // Handle Escape key to close modal
   React.useEffect(() => {
@@ -79,7 +113,7 @@ export const McpConfigModal = ({
       window.dispatchEvent(
         new CustomEvent("mcp-servers-updated", {
           detail: mcpServers,
-        }),
+        })
       );
 
       if (mcpServers.length > 0) {
@@ -89,6 +123,136 @@ export const McpConfigModal = ({
       }
     }
   }, [mcpServers]);
+
+  // Periodic health check for all servers
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const checkAllServers = async () => {
+      const newHealths: ServerHealthMap = { ...serverHealths };
+      let changed = false;
+
+      for (const server of mcpServers) {
+        const url = typeof server === "string" ? server : server.url;
+        // Don't re-check if checked recently (e.g. within 30s) unless it was error/checking
+        const current = newHealths[url];
+        if (
+          current?.lastChecked &&
+          Date.now() - current.lastChecked < 30000 &&
+          current.status === "online"
+        ) {
+          continue;
+        }
+
+        // Set to checking if not already
+        if (current?.status !== "checking") {
+          setServerHealths((prev) => ({
+            ...prev,
+            [url]: { ...prev[url], status: "checking" },
+          }));
+        }
+
+        const health = await checkServerHealth(url);
+        newHealths[url] = health;
+        changed = true;
+      }
+
+      if (changed) {
+        setServerHealths((prev) => ({ ...prev, ...newHealths }));
+      }
+    };
+
+    // Check immediately on open
+    checkAllServers();
+
+    // Then poll every 30s
+    const interval = setInterval(checkAllServers, 30000);
+    return () => clearInterval(interval);
+  }, [isOpen, mcpServers]);
+
+  const checkServerHealth = async (url: string): Promise<ServerHealth> => {
+    const start = Date.now();
+    try {
+      // 1. Try health endpoint
+      // We'll try a few common patterns concurrently to be robust
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+      // Parallel fetch to potential health/tools endpoints
+      // Note: In a real standardized world, this would be a single known endpoint.
+      // Here we assume /health or root might work, and /tools for tools.
+      const healthPromise = fetch(`${url}/health`, {
+        signal: controller.signal,
+      }).catch(() => null);
+      const rootPromise = fetch(url, { signal: controller.signal }).catch(
+        () => null
+      );
+      const toolsPromise = fetch(`${url}/tools`, {
+        signal: controller.signal,
+      }).catch(() => null); // Or /mcp/tools or via JSON-RPC
+
+      const [healthRes, rootRes, toolsRes] = await Promise.all([
+        healthPromise,
+        rootPromise,
+        toolsPromise,
+      ]);
+
+      clearTimeout(timeoutId);
+
+      const latency = Date.now() - start;
+      const isOnline =
+        (healthRes?.ok || rootRes?.ok) ?? (toolsRes?.ok ? true : false);
+
+      if (!isOnline) {
+        return {
+          status: "offline",
+          lastChecked: Date.now(),
+          error: "Unreachable",
+        };
+      }
+
+      // Try to parse tools
+      let tools: Tool[] = [];
+      if (toolsRes?.ok) {
+        try {
+          const data = await toolsRes.json();
+          if (data.tools && Array.isArray(data.tools)) {
+            tools = data.tools;
+          } else if (Array.isArray(data)) {
+            // Heuristic: if array of objects with name, assume tools
+            tools = data;
+          }
+        } catch (e) {
+          console.warn("Failed to parse tools", e);
+        }
+      }
+
+      return {
+        status: "online",
+        latency,
+        lastChecked: Date.now(),
+        tools,
+      };
+    } catch (e: any) {
+      return {
+        status: "error",
+        lastChecked: Date.now(),
+        error: e.message || "Connection failed",
+      };
+    }
+  };
+
+  const handleTestConnection = async () => {
+    if (!serverUrl.trim()) return;
+
+    setIsTestLoading(true);
+    setTestResult(null);
+
+    const health = await checkServerHealth(serverUrl.trim());
+
+    setTestResult(health);
+    setIsTestLoading(false);
+  };
 
   const addServer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,15 +264,35 @@ export const McpConfigModal = ({
       };
       setMcpServers((prev) => [...prev, serverConfig]);
 
+      // Pre-populate health if we just tested it
+      if (testResult && serverUrl.trim() === serverConfig.url) {
+        setServerHealths((prev) => ({
+          ...prev,
+          [serverConfig.url]: testResult,
+        }));
+      }
+
       // Reset form fields
       setServerUrl("");
       setServerName("");
       setTransportType(MCPTransport.HTTP);
+      setTestResult(null);
     }
   };
 
   const removeServer = (index: number) => {
     setMcpServers((prev) => prev.filter((_, i) => i !== index));
+    // Optional: cleanup health state, though not strictly necessary
+  };
+
+  const toggleServerExpand = (index: number) => {
+    const newSet = new Set(expandedServers);
+    if (newSet.has(index)) {
+      newSet.delete(index);
+    } else {
+      newSet.add(index);
+    }
+    setExpandedServers(newSet);
   };
 
   // Helper function to get server display information
@@ -140,45 +324,28 @@ export const McpConfigModal = ({
   const instructions = `
 ###
 
-After configuring your MCP servers below, integrate them into your application.
+**What is an MCP Server?**
+Think of an MCP server as a "power-up" that adds new capabilities to this chat. It sits on your computer and safely lets the AI talk to your local tools, files, or other services.
 
-#### 1. Import the required hook
+**How to connect:**
 
-\`\`\`tsx
-import { useMcpServers } from "@/components/tambo/mcp-config-modal";
-\`\`\`
+1.  **Run an MCP Server**: 
+    You can run a server using a terminal or an MCP manager app. It needs to provide a URL (like \`http://localhost:3000\`).
 
-#### 2. Load MCP servers and pass to TamboProvider:
+2.  **Paste the URL**:
+    Copy that URL into the box below.
 
-\`\`\`tsx
-const mcpServers = useMcpServers();
-\`\`\`
+3.  **Test & Add**:
+    Click "Test" to make sure it's working, then click "Add Server".
 
-#### 3. Example implementation:
-
-\`\`\`tsx
-function MyApp() {
-  const mcpServers = useMcpServers(); // Reactive - updates when servers change
-
-  return (
-    <TamboProvider
-      apiKey={apiKey}
-      components={components}
-      tools={tools}
-      mcpServers={mcpServers}
-    >
-      {/* Your app components */}
-    </TamboProvider>
-  );
-}
-\`\`\`
+*Once connected, the AI can use the tools provided by that server.*
 `;
 
   const modalContent = (
     <motion.div
       className={cn(
         "fixed inset-0 bg-backdrop flex items-center justify-center z-50",
-        className,
+        className
       )}
       onClick={handleBackdropClick}
       initial={{ opacity: 0 }}
@@ -206,12 +373,11 @@ function MyApp() {
               type="button"
             >
               <span className="text-sm font-semibold text-foreground">
-                Setup Instructions
+                How to Setup
               </span>
               <ChevronDown
-                className={`w-4 h-4 text-foreground transition-transform duration-200 ${
-                  showInstructions ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 text-foreground transition-transform duration-200 ${showInstructions ? "rotate-180" : ""
+                  }`}
               />
             </button>
             {showInstructions && (
@@ -230,14 +396,10 @@ function MyApp() {
           {/* Description */}
           <div className="mb-6">
             <p className="text-foreground mb-3 text-sm leading-relaxed">
-              Configure{" "}
-              <span className="font-semibold text-foreground">client-side</span>{" "}
-              MCP servers to extend the capabilities of your tambo application.
-              These servers will be connected{" "}
-              <i>
-                <b>from the browser</b>
-              </i>{" "}
-              and exposed as tools to tambo.
+              Connect{" "}
+              <span className="font-semibold text-foreground">External Tools</span>{" "}
+              (MCP Servers) to give the AI access to more capabilities, like your
+              local files, databases, or custom scripts.
             </p>
           </div>
 
@@ -252,18 +414,63 @@ function MyApp() {
                 >
                   Server URL
                   <span className="text-muted-foreground font-normal ml-1">
-                    (must be accessible from the browser)
+                    (e.g., http://localhost:3000)
                   </span>
                 </label>
-                <input
-                  id="server-url"
-                  type="url"
-                  value={serverUrl}
-                  onChange={(e) => setServerUrl(e.target.value)}
-                  placeholder="https://your-mcp-server-url.com"
-                  className="w-full px-3 py-2.5 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-150 text-sm"
-                  required
-                />
+                <div className="flex gap-2">
+                  <input
+                    id="server-url"
+                    type="url"
+                    value={serverUrl}
+                    onChange={(e) => {
+                      setServerUrl(e.target.value);
+                      setTestResult(null); // Clear previous test result on change
+                    }}
+                    placeholder="https://your-mcp-server-url.com"
+                    className="flex-1 px-3 py-2.5 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-150 text-sm"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={handleTestConnection}
+                    disabled={!serverUrl.trim() || isTestLoading}
+                    className={cn(
+                      "px-3 py-2.5 rounded-lg border border-muted bg-muted/50 hover:bg-muted font-medium text-sm transition-colors flex items-center gap-2",
+                      isTestLoading && "opacity-70 cursor-not-allowed"
+                    )}
+                  >
+                    {isTestLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Activity className="w-4 h-4" />
+                    )}
+                    Test
+                  </button>
+                </div>
+                {/* Test Result Feedback */}
+                {testResult && (
+                  <div className={cn(
+                    "mt-2 text-sm flex items-center gap-2",
+                    testResult.status === "online" ? "text-green-600" : "text-destructive"
+                  )}>
+                    {testResult.status === "online" ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Connected ({testResult.latency}ms)</span>
+                        {testResult.tools && testResult.tools.length > 0 && (
+                          <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full ml-1">
+                            {testResult.tools.length} tools found
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Connection failed: {testResult.error || "Unknown error"}</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Server Name */}
@@ -325,7 +532,8 @@ function MyApp() {
 
             <button
               type="submit"
-              className="mt-6 w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer transition-all duration-150 font-medium"
+              className="mt-6 w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer transition-all duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!serverUrl.trim()}
             >
               Add Server
             </button>
@@ -344,44 +552,119 @@ function MyApp() {
           {/* Server List */}
           {mcpServers.length > 0 ? (
             <div>
-              <h4 className="font-medium mb-3 text-foreground">
-                Connected Servers ({mcpServers.length})
-              </h4>
+              <div className="flex items-center justify-between mb-3 leading-none">
+                <h4 className="font-medium text-foreground">
+                  Connected Servers ({mcpServers.length})
+                </h4>
+                {/* Refresh Button - Optional but nice */}
+                <button
+                  onClick={() => {
+                    // Force re-check
+                    setServerHealths({});
+                    // Effect will trigger check
+                  }}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" /> Refresh
+                </button>
+              </div>
+
               <div className="space-y-2">
                 {mcpServers.map((server, index) => {
                   const serverInfo = getServerInfo(server);
+                  const health = serverHealths[serverInfo.url];
+                  const isOnline = health?.status === "online";
+                  const isChecking = health?.status === "checking";
+                  const isError = health?.status === "error" || health?.status === "offline";
+                  const isExpanded = expandedServers.has(index);
+
                   return (
-                    <div
-                      key={index}
-                      className="flex items-start justify-between p-4 border border-muted rounded-lg hover:border-muted-backdrop transition-colors duration-150"
+                    <motion.div
+                      layout
+                      key={`${serverInfo.url}-${index}`}
+                      className="border border-muted rounded-lg overflow-hidden transition-all duration-200"
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center mb-1">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
-                          <span className="text-foreground font-medium truncate">
-                            {serverInfo.url}
-                          </span>
-                        </div>
-                        <div className="ml-5 space-y-1">
-                          {serverInfo.name && (
-                            <div className="text-sm text-muted-foreground">
-                              <span className="font-medium">Name:</span>{" "}
-                              {serverInfo.name}
+                      <div className="flex items-start justify-between p-4 bg-card hover:bg-muted/20 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center mb-1 gap-2">
+                            {/* Status Indicator */}
+                            <div className="relative group">
+                              {isChecking ? (
+                                <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full animate-pulse" />
+                              ) : isOnline ? (
+                                <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_4px_rgba(34,197,94,0.5)]" />
+                              ) : (
+                                <div className="w-2.5 h-2.5 bg-destructive rounded-full" />
+                              )}
+                              {/* Tooltip for status */}
+                              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 border border-border">
+                                {isChecking ? "Checking..." : isOnline ? `Online (${health?.latency || "<1"}ms)` : `Offline: ${health?.error || "Unknown"}`}
+                              </div>
                             </div>
-                          )}
-                          <div className="text-sm text-muted-foreground">
-                            <span className="font-medium">Transport:</span>{" "}
-                            {serverInfo.transport}
+
+                            <span className="text-foreground font-medium truncate">
+                              {serverInfo.url}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1.5 ml-4.5">
+                            {serverInfo.name && (
+                              <span>{serverInfo.name}</span>
+                            )}
+                            <span className="uppercase tracking-wider text-[10px] bg-muted/50 px-1.5 py-0.5 rounded border border-muted-foreground/20">
+                              {serverInfo.transport}
+                            </span>
+                            {health?.tools && health.tools.length > 0 && (
+                              <button
+                                onClick={() => toggleServerExpand(index)}
+                                className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
+                              >
+                                <Box className="w-3 h-3" />
+                                {health.tools.length} tools
+                                <ChevronDown className={cn("w-3 h-3 transition-transform", isExpanded && "rotate-180")} />
+                              </button>
+                            )}
                           </div>
                         </div>
+
+                        <button
+                          onClick={() => removeServer(index)}
+                          className="ml-4 px-2 py-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150 flex-shrink-0"
+                          title="Remove server"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => removeServer(index)}
-                        className="ml-4 px-3 py-1.5 text-sm bg-destructive/20 text-destructive rounded-md hover:bg-destructive/30 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-1 transition-colors duration-150 flex-shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+
+                      {/* Expanded Tools List */}
+                      <AnimatePresence>
+                        {isExpanded && health?.tools && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="bg-muted/30 border-t border-muted px-4"
+                          >
+                            <div className="py-3 space-y-2">
+                              <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Available Tools</h5>
+                              <div className="grid gap-2">
+                                {health.tools.map((tool, tIdx) => (
+                                  <div key={tIdx} className="bg-card border border-muted p-2 rounded text-sm flex flex-col gap-0.5">
+                                    <div className="font-medium text-foreground flex items-center gap-2">
+                                      <div className="w-1 h-1 bg-primary rounded-full"></div>
+                                      {tool.name}
+                                    </div>
+                                    {tool.description && (
+                                      <div className="text-muted-foreground text-xs ml-3 line-clamp-1">{tool.description}</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   );
                 })}
               </div>
