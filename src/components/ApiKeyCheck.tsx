@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ApiKeyCheckProps {
   children: React.ReactNode;
@@ -82,19 +82,35 @@ const CopyButton = ({ text }: { text: string }) => {
 };
 
 export function ApiKeyCheck({ children }: ApiKeyCheckProps) {
-  const isApiKeyMissing = !process.env.NEXT_PUBLIC_TAMBO_API_KEY;
+  const [isApiKeyConfigured, setIsApiKeyConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/tambo-status")
+      .then((res) => res.json())
+      .then((data) => setIsApiKeyConfigured(data.configured))
+      .catch(() => setIsApiKeyConfigured(false));
+  }, []);
+
+  if (isApiKeyConfigured === null) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="min-w-6 animate-pulse">...</div>
+        <p>Checking Tambo configuration...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-start gap-4">
       <div className="flex-grow">
         <div className="flex items-center gap-1">
-          <div className="min-w-6">{isApiKeyMissing ? "❌" : "✅"}</div>
+          <div className="min-w-6">{isApiKeyConfigured ? "✅" : "❌"}</div>
           <p>
-            {isApiKeyMissing ? "Tambo not initialized" : "Tambo initialized"}
+            {isApiKeyConfigured ? "Tambo initialized" : "Tambo not initialized"}
           </p>
         </div>
-        {isApiKeyMissing && <ApiKeyMissingAlert />}
-        {!isApiKeyMissing && children}
+        {!isApiKeyConfigured && <ApiKeyMissingAlert />}
+        {isApiKeyConfigured && children}
       </div>
     </div>
   );

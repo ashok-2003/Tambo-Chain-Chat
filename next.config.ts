@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
       effect: false,
       sury: false,
       "@valibot/to-json-schema": false,
+      // Fixes for walletconnect/metamask build issues
+      "pino-pretty": false,
+      encoding: false,
+      lokijs: false,
+      "@react-native-async-storage/async-storage": false,
     };
     return config;
   },

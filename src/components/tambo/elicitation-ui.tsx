@@ -513,10 +513,10 @@ export const ElicitationUI: React.FC<ElicitationUIProps> = ({
     const [fieldName, fieldSchema] = fields[0];
     const validationError = touchedFields.has(fieldName)
       ? getValidationError(
-          formData[fieldName],
-          fieldSchema,
-          requiredFields.includes(fieldName),
-        )
+        formData[fieldName],
+        fieldSchema,
+        requiredFields.includes(fieldName),
+      )
       : null;
 
     return (
@@ -573,10 +573,10 @@ export const ElicitationUI: React.FC<ElicitationUIProps> = ({
         {fields.map(([name, schema], index) => {
           const validationError = touchedFields.has(name)
             ? getValidationError(
-                formData[name],
-                schema,
-                requiredFields.includes(name),
-              )
+              formData[name],
+              schema,
+              requiredFields.includes(name),
+            )
             : null;
 
           return (
