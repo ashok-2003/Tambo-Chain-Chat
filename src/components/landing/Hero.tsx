@@ -1,40 +1,48 @@
 "use client";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ArrowRight } from "lucide-react";
 
 export function Hero() {
     return (
-        <section className="relative w-full max-w-5xl mx-auto pt-20 pb-12 px-6 text-center">
-            <div className="absolute top-4 right-4">
+        <section className="relative w-full max-w-4xl mx-auto pt-24 pb-16 px-6 text-center">
+            <div className="absolute top-6 right-6">
                 <ThemeToggle />
             </div>
 
-            <div className="space-y-6 animate-fade-in">
-                <div className="inline-block px-4 py-1.5 rounded-full border border-primary/20 bg-primary/10 text-primary text-sm font-medium mb-4 backdrop-blur-md">
-                    The UI Strikes Back Hackathon
+            <div className="space-y-8 animate-fade-in">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/50 text-xs font-medium tracking-wide text-muted-foreground backdrop-blur-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    Tambo AI Hackathon
                 </div>
 
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-white via-white to-gray-400 dark:from-white dark:via-gray-200 dark:to-gray-500 pb-2">
-                    Talk to your <br />
-                    <span className="text-primary drop-shadow-[0_0_15px_rgba(0,255,159,0.3)]">crypto portfolio.</span>
+                {/* Headline */}
+                <h1 className="text-5xl md:text-7xl font-bold tracking-[-0.03em] leading-[1.05]">
+                    <span className="text-gradient">Talk to your</span>
+                    <br />
+                    <span className="text-primary">crypto portfolio.</span>
                 </h1>
 
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                    No more static dashboards. Just ask, and ChainChat generates interactive charts, tables, and simulators instantly.
+                {/* Subtext */}
+                <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed font-light">
+                    No more static dashboards. Ask questions, get interactive charts, tables, and simulators — generated in real time.
                 </p>
 
-                <div className="flex gap-4 justify-center pt-4">
+                {/* CTAs */}
+                <div className="flex gap-4 justify-center pt-2">
                     <a
                         href="/chat"
-                        className="px-8 py-3 rounded-md font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(0,255,159,0.3)] hover:shadow-[0_0_25px_rgba(0,255,159,0.5)]"
+                        className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-semibold text-sm text-primary-foreground bg-primary hover:brightness-110 transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.1),0_4px_16px_rgba(194,102,45,0.15)]"
                     >
                         Launch App
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                     </a>
                     <a
                         href="https://github.com/yourusername/chainchat"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-8 py-3 rounded-md font-medium border border-border bg-secondary/5 hover:bg-secondary/10 hover:border-primary/50 transition-colors"
+                        className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-medium text-sm border border-border text-foreground/80 hover:text-foreground hover:border-foreground/20 hover:bg-muted/50 transition-all duration-200"
                     >
                         GitHub
                     </a>

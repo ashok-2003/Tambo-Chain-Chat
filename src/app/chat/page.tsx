@@ -7,15 +7,7 @@ import { TamboProvider } from "@tambo-ai/react";
 import { Header } from "@/components/tambo/header";
 import * as React from "react";
 
-/**
- * Home page component that renders the Tambo chat interface.
- *
- * @remarks
- * The API key is kept server-side and requests are proxied through /api/tambo.
- * This prevents the API key from being exposed in the browser.
- */
 export default function Home() {
-  // Load MCP server configurations
   const mcpServers = useMcpServers();
   const [mounted, setMounted] = React.useState(false);
 
@@ -33,10 +25,8 @@ export default function Home() {
       tamboUrl={process.env.NEXT_PUBLIC_TAMBO_URL!}
       mcpServers={mcpServers}
     >
-      <div className="flex flex-col h-screen bg-background overflow-hidden selection:bg-primary/20">
+      <div className="flex flex-col h-screen bg-background overflow-hidden selection:bg-primary/15">
         <Header />
-
-        {/* Main Workspace Area */}
         <main className="flex-1 flex flex-col relative overflow-hidden">
           <MessageThreadFull className="h-full w-full" />
         </main>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Plus, Trash2, RefreshCw, Calculator } from "lucide-react";
+import { Plus, Trash2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { coingeckoService, CoinGeckoMarketData } from "@/services/coingecko";
 
@@ -17,8 +17,8 @@ export const portfolioTableSchema = z.object({
 export type PortfolioTableProps = z.infer<typeof portfolioTableSchema>;
 
 interface PortfolioItem {
-    id: string; // Internal ID for keys
-    asset: string; // Coin ID (e.g. bitcoin)
+    id: string;
+    asset: string;
     quantity: number;
     avgBuy: number;
     currentPrice: number | null;
@@ -43,7 +43,6 @@ export function PortfolioTable({ initialPortfolio = [] }: PortfolioTableProps) {
         try {
             const ids = [...new Set(items.map(i => i.asset))];
             const marketData = await coingeckoService.getMarketData(ids);
-
             setItems(prev => prev.map(item => {
                 const data = marketData.find(d => d.id === item.asset);
                 return {
@@ -64,7 +63,6 @@ export function PortfolioTable({ initialPortfolio = [] }: PortfolioTableProps) {
     }, []);
 
     const addItem = () => {
-        // Add a placeholder item
         setItems([...items, {
             id: Math.random().toString(36).substr(2, 9),
             asset: "bitcoin",
@@ -74,7 +72,7 @@ export function PortfolioTable({ initialPortfolio = [] }: PortfolioTableProps) {
         }]);
     };
 
-    const updateItem = (id: string, field: keyof PortfolioItem, value: any) => {
+    const updateItem = (id: string, field: keyof PortfolioItem, value: string | number) => {
         setItems(prev => prev.map(item =>
             item.id === id ? { ...item, [field]: value } : item
         ));
@@ -90,31 +88,31 @@ export function PortfolioTable({ initialPortfolio = [] }: PortfolioTableProps) {
     const pnlPercent = totalCost > 0 ? (totalPnL / totalCost) * 100 : 0;
 
     return (
-        <div className="w-full rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
-            <div className="p-4 border-b flex justify-between items-center bg-muted/30">
-                <h3 className="font-semibold flex items-center gap-2">
-                    <Calculator className="w-4 h-4" /> Portfolio Simulator
-                </h3>
+        <div className="w-full rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="px-5 py-3.5 border-b border-border flex justify-between items-center">
+                <h3 className="font-semibold text-sm">Portfolio Simulator</h3>
                 <button
                     onClick={fetchPrices}
-                    className={cn("p-2 rounded-full hover:bg-muted transition-colors", loading && "animate-spin")}
+                    className={cn("p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground", loading && "animate-spin")}
                     title="Refresh Prices"
                 >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-3.5 h-3.5" />
                 </button>
             </div>
 
+            {/* Table */}
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
-                        <tr>
-                            <th className="px-4 py-3">Asset</th>
-                            <th className="px-4 py-3 text-right">Qty</th>
-                            <th className="px-4 py-3 text-right">Avg Buy</th>
-                            <th className="px-4 py-3 text-right">Current</th>
-                            <th className="px-4 py-3 text-right">Value</th>
-                            <th className="px-4 py-3 text-right">P/L</th>
-                            <th className="px-4 py-3 text-center">Action</th>
+                <table className="w-full text-xs">
+                    <thead>
+                        <tr className="border-b border-border bg-muted/30">
+                            <th className="px-4 py-2.5 text-left font-medium text-muted-foreground uppercase tracking-wider">Asset</th>
+                            <th className="px-4 py-2.5 text-right font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
+                            <th className="px-4 py-2.5 text-right font-medium text-muted-foreground uppercase tracking-wider">Avg Buy</th>
+                            <th className="px-4 py-2.5 text-right font-medium text-muted-foreground uppercase tracking-wider">Current</th>
+                            <th className="px-4 py-2.5 text-right font-medium text-muted-foreground uppercase tracking-wider">Value</th>
+                            <th className="px-4 py-2.5 text-right font-medium text-muted-foreground uppercase tracking-wider">P/L</th>
+                            <th className="px-4 py-2.5 w-10" />
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -124,45 +122,47 @@ export function PortfolioTable({ initialPortfolio = [] }: PortfolioTableProps) {
                             const pnl = currentValue - cost;
 
                             return (
-                                <tr key={item.id} className="hover:bg-muted/10 transition-colors">
-                                    <td className="px-4 py-3 font-medium">
+                                <tr key={item.id} className="hover:bg-muted/20 transition-colors group">
+                                    <td className="px-4 py-2.5">
                                         <input
-                                            className="bg-transparent border-b border-dashed border-muted-foreground/30 focus:border-primary focus:outline-none w-24"
+                                            className="bg-transparent border-b border-dashed border-transparent focus:border-primary focus:outline-none w-24 text-sm font-medium"
                                             value={item.asset}
                                             onChange={(e) => updateItem(item.id, 'asset', e.target.value)}
                                         />
                                     </td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-4 py-2.5 text-right">
                                         <input
                                             type="number"
-                                            className="bg-transparent border-b border-dashed border-muted-foreground/30 focus:border-primary focus:outline-none w-16 text-right"
+                                            className="bg-transparent border-b border-dashed border-transparent focus:border-primary focus:outline-none w-16 text-right font-mono text-sm"
                                             value={item.quantity}
                                             onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
                                         />
                                     </td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-4 py-2.5 text-right">
                                         <input
                                             type="number"
-                                            className="bg-transparent border-b border-dashed border-muted-foreground/30 focus:border-primary focus:outline-none w-20 text-right"
+                                            className="bg-transparent border-b border-dashed border-transparent focus:border-primary focus:outline-none w-20 text-right font-mono text-sm"
                                             value={item.avgBuy}
                                             onChange={(e) => updateItem(item.id, 'avgBuy', parseFloat(e.target.value) || 0)}
                                         />
                                     </td>
-                                    <td className="px-4 py-3 text-right font-mono">
-                                        {item.currentPrice ? `$${item.currentPrice.toLocaleString()}` : "Loading..."}
+                                    <td className="px-4 py-2.5 text-right font-mono text-sm text-muted-foreground">
+                                        {item.currentPrice ? `$${item.currentPrice.toLocaleString()}` : "..."}
                                     </td>
-                                    <td className="px-4 py-3 text-right font-mono font-medium">
+                                    <td className="px-4 py-2.5 text-right font-mono text-sm font-medium">
                                         ${currentValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                                     </td>
-                                    <td className={cn("px-4 py-3 text-right font-mono font-medium", pnl >= 0 ? "text-green-500" : "text-red-500")}>
+                                    <td className={cn("px-4 py-2.5 text-right font-mono text-sm font-medium",
+                                        pnl >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+                                    )}>
                                         {pnl >= 0 ? "+" : ""}{pnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                                     </td>
-                                    <td className="px-4 py-3 text-center">
+                                    <td className="px-4 py-2.5 text-center">
                                         <button
                                             onClick={() => removeItem(item.id)}
-                                            className="text-muted-foreground hover:text-destructive transition-colors"
+                                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </td>
                                 </tr>
@@ -170,7 +170,7 @@ export function PortfolioTable({ initialPortfolio = [] }: PortfolioTableProps) {
                         })}
                         {items.length === 0 && (
                             <tr>
-                                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                                <td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
                                     No assets in portfolio. Add one to start tracking.
                                 </td>
                             </tr>
@@ -179,18 +179,19 @@ export function PortfolioTable({ initialPortfolio = [] }: PortfolioTableProps) {
                 </table>
             </div>
 
-            <div className="p-4 bg-muted/20 border-t flex justify-between items-center">
+            {/* Footer */}
+            <div className="px-5 py-4 border-t border-border flex justify-between items-center bg-muted/20">
                 <button
                     onClick={addItem}
-                    className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                    <Plus className="w-4 h-4" /> Add Asset
+                    <Plus className="w-3.5 h-3.5" /> Add Asset
                 </button>
 
                 <div className="text-right">
-                    <div className="text-xs text-muted-foreground uppercase">Total Portfolio Value</div>
-                    <div className="text-xl font-bold font-mono">${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                    <div className={cn("text-xs font-mono", pnlPercent >= 0 ? "text-green-500" : "text-red-500")}>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-mono mb-0.5">Total Value</div>
+                    <div className="text-lg font-bold font-mono">${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                    <div className={cn("text-xs font-mono", pnlPercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500")}>
                         {pnlPercent >= 0 ? "+" : ""}{pnlPercent.toFixed(2)}% (${totalPnL.toFixed(2)})
                     </div>
                 </div>

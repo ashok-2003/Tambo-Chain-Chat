@@ -13,51 +13,68 @@ export const allocationBreakdownSchema = z.object({
 
 export type AllocationBreakdownProps = z.infer<typeof allocationBreakdownSchema>;
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+const COLORS = ['#d4956a', '#60a5fa', '#a78bfa', '#34d399', '#fbbf24', '#f87171'];
 
 export function AllocationBreakdown({ data, title = "Allocation Breakdown" }: AllocationBreakdownProps) {
-    // Sort data by value and take top 5 + "Others" if too many?
-    // For simplicity, just show all for now.
-
     if (!data || data.length === 0) {
-        return <div className="p-4 text-center text-muted-foreground">No allocation data provided.</div>;
+        return (
+            <div className="p-6 text-center text-sm text-muted-foreground border border-border rounded-xl bg-card">
+                No allocation data provided.
+            </div>
+        );
     }
 
     const total = data.reduce((sum, item) => sum + item.value, 0);
 
     return (
-        <div className="w-full max-w-sm p-4 rounded-xl border bg-card text-card-foreground shadow-sm">
-            <h3 className="font-semibold mb-4 text-center">{title}</h3>
-            <div className="h-[250px] w-full">
+        <div className="w-full max-w-sm p-5 rounded-xl border border-border bg-card shadow-sm">
+            <h3 className="font-semibold text-sm text-center mb-1">{title}</h3>
+            <p className="text-[10px] text-muted-foreground text-center font-mono tracking-wide uppercase mb-4">Portfolio Distribution</p>
+
+            <div className="h-[220px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
                             data={data}
                             cx="50%"
                             cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
+                            innerRadius={55}
+                            outerRadius={78}
                             fill="#8884d8"
-                            paddingAngle={5}
+                            paddingAngle={3}
                             dataKey="value"
                             nameKey="asset"
+                            strokeWidth={0}
                         >
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="var(--background)" strokeWidth={2} />
+                            {data.map((_entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
                         <Tooltip
-                            contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.5)" }}
-                            itemStyle={{ color: "#fff" }}
-                            formatter={(value: number) => [`${value} (${((value / total) * 100).toFixed(1)}%)`, 'Value']}
+                            contentStyle={{
+                                borderRadius: "8px",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--popover)",
+                                color: "var(--popover-foreground)",
+                                boxShadow: "0 4px 16px -4px rgba(0,0,0,0.2)",
+                                fontSize: "12px",
+                            }}
+                            formatter={(value: number) => [`$${value.toLocaleString()} (${((value / total) * 100).toFixed(1)}%)`, '']}
                         />
-                        <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                        <Legend
+                            verticalAlign="bottom"
+                            height={36}
+                            iconType="circle"
+                            iconSize={8}
+                            formatter={(value) => <span className="text-xs text-muted-foreground ml-1">{value}</span>}
+                        />
                     </PieChart>
                 </ResponsiveContainer>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-4 text-xs text-muted-foreground">
-                <div>Total Value</div>
-                <div className="text-right font-mono font-medium text-foreground">${total.toLocaleString()}</div>
+
+            <div className="flex items-center justify-between pt-4 mt-2 border-t border-border">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-mono">Total Value</span>
+                <span className="text-sm font-mono font-semibold text-foreground">${total.toLocaleString()}</span>
             </div>
         </div>
     );

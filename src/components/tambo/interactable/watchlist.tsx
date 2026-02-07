@@ -6,9 +6,7 @@ import { Plus, X, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { coingeckoService, CoinGeckoMarketData } from "@/services/coingecko";
 
-export const watchlistSchema = z.object({
-    // No props needed, uses internal state
-});
+export const watchlistSchema = z.object({});
 
 export type WatchlistProps = z.infer<typeof watchlistSchema>;
 
@@ -20,17 +18,15 @@ export function Watchlist() {
     const [error, setError] = useState("");
     const [searching, setSearching] = useState(false);
 
-    // Load from localStorage
     useEffect(() => {
         const saved = localStorage.getItem("tambo-watchlist");
         if (saved) {
             setTokens(JSON.parse(saved));
         } else {
-            setTokens(["bitcoin", "ethereum", "solana"]); // Default
+            setTokens(["bitcoin", "ethereum", "solana"]);
         }
     }, []);
 
-    // Save to localStorage
     useEffect(() => {
         if (tokens.length > 0) {
             localStorage.setItem("tambo-watchlist", JSON.stringify(tokens));
@@ -53,18 +49,13 @@ export function Watchlist() {
 
     const addToken = async () => {
         if (!newToken) return;
-
         setError("");
         setSearching(true);
 
         try {
-            // First try to search for the coin to get the correct ID
             const searchResults = await coingeckoService.searchCoins(newToken);
-
             if (searchResults.length > 0) {
-                // Use the first result's ID (most relevant)
                 const bestMatch = searchResults[0].id;
-
                 if (tokens.includes(bestMatch)) {
                     setError("Token already in watchlist");
                 } else {
@@ -87,23 +78,23 @@ export function Watchlist() {
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            addToken();
-        }
-    }
+        if (e.key === 'Enter') addToken();
+    };
 
     return (
-        <div className="w-full max-w-sm rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
-            <div className="p-4 border-b bg-muted/30">
-                <h3 className="font-semibold flex items-center gap-2 mb-3">
-                    <Star className="w-4 h-4 fill-primary stroke-primary" /> Watchlist
-                </h3>
-                <div className="flex gap-2 relative">
+        <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            {/* Header with search */}
+            <div className="px-5 py-4 border-b border-border">
+                <div className="flex items-center gap-2 mb-3">
+                    <Star className="w-4 h-4 text-primary fill-primary" />
+                    <h3 className="font-semibold text-sm">Watchlist</h3>
+                </div>
+                <div className="flex gap-2">
                     <input
                         type="text"
                         placeholder="Add token (e.g. Bitcoin)"
                         className={cn(
-                            "flex-1 px-3 py-1.5 text-sm rounded-md bg-background border outline-none focus:ring-1 ring-primary transition-colors",
+                            "flex-1 px-3 py-2 text-sm rounded-lg bg-muted/40 border border-border outline-none focus:ring-1 focus:ring-primary/40 transition-all font-mono placeholder:font-sans placeholder:text-muted-foreground/50",
                             error ? "border-destructive focus:ring-destructive" : ""
                         )}
                         value={newToken}
@@ -117,41 +108,46 @@ export function Watchlist() {
                     <button
                         onClick={addToken}
                         disabled={searching || !newToken}
-                        className="px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[60px]"
+                        className="px-3 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        {searching ? "..." : "Add"}
+                        {searching ? "..." : <Plus className="w-4 h-4" />}
                     </button>
                 </div>
-                {error && <div className="text-xs text-destructive mt-1.5 pl-1">{error}</div>}
+                {error && <div className="text-xs text-destructive mt-2">{error}</div>}
             </div>
 
+            {/* Token list */}
             <div className="divide-y divide-border">
                 {loading && marketData.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground animate-pulse">Loading prices...</div>
+                    <div className="px-5 py-6 text-center text-xs text-muted-foreground font-mono animate-pulse">
+                        LOADING PRICES...
+                    </div>
                 ) : (
                     marketData.map(coin => {
                         const isPositive = coin.price_change_percentage_24h >= 0;
                         return (
-                            <div key={coin.id} className="p-3 flex items-center justify-between hover:bg-muted/20 transition-colors group">
-                                <div className="flex items-center gap-2">
+                            <div key={coin.id} className="px-5 py-3 flex items-center justify-between hover:bg-muted/20 transition-colors group">
+                                <div className="flex items-center gap-2.5">
                                     <img src={coin.image} alt={coin.name} className="w-6 h-6 rounded-full" />
                                     <div>
-                                        <div className="font-medium text-sm leading-none">{coin.symbol.toUpperCase()}</div>
-                                        <div className="text-xs text-muted-foreground">{coin.name}</div>
+                                        <div className="font-semibold text-xs leading-none mb-0.5">{coin.symbol.toUpperCase()}</div>
+                                        <div className="text-[10px] text-muted-foreground">{coin.name}</div>
                                     </div>
                                 </div>
-                                <div className="text-right flex items-center gap-4">
-                                    <div>
-                                        <div className="font-medium text-sm font-mono">${coin.current_price.toLocaleString()}</div>
-                                        <div className={cn("text-xs", isPositive ? "text-green-500" : "text-red-500")}>
+                                <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                        <div className="font-medium text-xs font-mono">${coin.current_price.toLocaleString()}</div>
+                                        <div className={cn("text-[10px] font-mono font-medium",
+                                            isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+                                        )}>
                                             {isPositive ? "+" : ""}{coin.price_change_percentage_24h.toFixed(2)}%
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => removeToken(coin.id)}
-                                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-0.5"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             </div>
@@ -159,7 +155,7 @@ export function Watchlist() {
                     })
                 )}
                 {marketData.length === 0 && !loading && (
-                    <div className="p-8 text-center text-sm text-muted-foreground">
+                    <div className="px-5 py-8 text-center text-xs text-muted-foreground">
                         Your watchlist is empty.
                     </div>
                 )}

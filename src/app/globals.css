@@ -3,7 +3,6 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Tailwind CSS Variables customized with tambo colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -28,177 +27,230 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* Tambo Specific Variables needed for tambo components */
+  /* Tambo Specific Variables */
   --color-container: var(--container);
   --color-backdrop: var(--backdrop);
   --color-muted-backdrop: var(--muted-backdrop);
 }
 
+/* ═══════════════════════════════════════════════
+   LIGHT THEME - Anthropic-inspired warm neutrals
+   ═══════════════════════════════════════════════ */
 :root {
-  /* Default Tailwind CSS Variables customized with tambo colors */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.14 0 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.14 0 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.14 0 285);
-  --primary: oklch(0.31 0.02 281);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.54 0.027 261);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.92 0 260);
-  --muted-foreground: oklch(0.73 0.022 260);
-  --accent: oklch(0.97 0 286);
-  --accent-foreground: oklch(0.21 0 286);
-  --destructive: oklch(0.64 0.2 25);
-  --border: oklch(0.93 0 242);
-  --input: oklch(0.92 0 286);
-  --ring: oklch(0.14 0 285);
-  --chart-1: oklch(0.72 0.15 60);
-  --chart-2: oklch(0.62 0.2 6);
-  --chart-3: oklch(0.53 0.2 262);
-  --chart-4: oklch(0.7 0.13 165);
-  --chart-5: oklch(0.62 0.2 313);
+  --background: #faf9f6;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #c2662d;
+  --primary-foreground: #ffffff;
+  --secondary: #6b7280;
+  --secondary-foreground: #ffffff;
+  --muted: #f3f1ed;
+  --muted-foreground: #78716c;
+  --accent: #f3f1ed;
+  --accent-foreground: #1a1a1a;
+  --destructive: #dc2626;
+  --border: #e7e5e0;
+  --input: #e7e5e0;
+  --ring: #c2662d;
+  --chart-1: #c2662d;
+  --chart-2: #2563eb;
+  --chart-3: #8b5cf6;
+  --chart-4: #059669;
+  --chart-5: #d97706;
 
-  /* Tambo Specific Variables needed for tambo components */
-  --container: oklch(0.98 0 247);
-  --backdrop: oklch(0.25 0.07 252 / 0.25);
-  --muted-backdrop: oklch(0.25 0.07 252 / 0.1);
-  --radius: 0.5rem;
+  /* Tambo Specific */
+  --container: #f7f6f3;
+  --backdrop: rgba(26, 26, 26, 0.2);
+  --muted-backdrop: rgba(26, 26, 26, 0.08);
+  --radius: 0.625rem;
   --panel-left-width: 500px;
   --panel-right-width: 500px;
   --sidebar-width: 3rem;
 }
 
+/* ═══════════════════════════════════════════════
+   DARK THEME - Comet-inspired deep charcoal
+   ═══════════════════════════════════════════════ */
 .dark {
-  /* Neon Dark Mode Theme - Hackathon Vibe */
-  /* Background: Deep Blue/Black (#0f172a / slate-900 equivalent) */
-  --background: oklch(0.15 0.04 250); 
-  /* Foreground: White/Cyan tinted */
-  --foreground: oklch(0.98 0.01 200);
-  
-  /* Card: Slightly lighter than bg */
-  --card: oklch(0.20 0.05 250);
-  --card-foreground: oklch(0.98 0.01 200);
-  
-  --popover: oklch(0.20 0.05 250);
-  --popover-foreground: oklch(0.98 0.01 200);
-  
-  /* Primary: Neon Green (#00ff9f equivalent) */
-  --primary: oklch(0.85 0.25 150);
-  --primary-foreground: oklch(0.15 0.04 250);
-  
-  /* Secondary: Cyan */
-  --secondary: oklch(0.75 0.20 220);
-  --secondary-foreground: oklch(0.15 0.04 250);
-  
-  --muted: oklch(0.25 0.05 250);
-  --muted-foreground: oklch(0.70 0.05 220);
-  
-  --accent: oklch(0.25 0.05 250);
-  --accent-foreground: oklch(0.98 0.01 200);
-  
-  --destructive: oklch(0.64 0.2 25);
-  
-  --border: oklch(0.30 0.05 250);
-  --input: oklch(0.30 0.05 250);
-  --ring: oklch(0.85 0.25 150);
-  
-  --chart-1: oklch(0.85 0.25 150); /* Neon Green */
-  --chart-2: oklch(0.75 0.20 220); /* Cyan */
-  --chart-3: oklch(0.65 0.25 300); /* Purple */
-  --chart-4: oklch(0.90 0.20 100); /* Yellow */
-  --chart-5: oklch(0.70 0.20 30);  /* Orange */
+  --background: #09090b;
+  --foreground: #e8e6e3;
+  --card: #131316;
+  --card-foreground: #e8e6e3;
+  --popover: #131316;
+  --popover-foreground: #e8e6e3;
+  --primary: #d4956a;
+  --primary-foreground: #09090b;
+  --secondary: #9ca3af;
+  --secondary-foreground: #09090b;
+  --muted: #1c1c20;
+  --muted-foreground: #7f7f8a;
+  --accent: #1c1c20;
+  --accent-foreground: #e8e6e3;
+  --destructive: #ef4444;
+  --border: #27272c;
+  --input: #27272c;
+  --ring: #d4956a;
+  --chart-1: #d4956a;
+  --chart-2: #60a5fa;
+  --chart-3: #a78bfa;
+  --chart-4: #34d399;
+  --chart-5: #fbbf24;
 
-  /* Tambo Specific Variables */
-  --container: oklch(0.15 0.04 250);
-  --backdrop: oklch(0.15 0.04 250 / 0.5);
-  --muted-backdrop: oklch(0.15 0.04 250 / 0.2);
-  --radius: 0.5rem;
+  /* Tambo Specific */
+  --container: #09090b;
+  --backdrop: rgba(9, 9, 11, 0.6);
+  --muted-backdrop: rgba(9, 9, 11, 0.3);
+  --radius: 0.625rem;
   --panel-left-width: 500px;
   --panel-right-width: 500px;
   --sidebar-width: 3rem;
 }
 
+/* ═══════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground transition-colors duration-300;
-    font-family: Arial, Helvetica, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection {
+    background: rgba(212, 149, 106, 0.2);
   }
 }
 
-/* Animations */
+/* ═══════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+   ═══════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
 
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════ */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 .animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
+  animation: fade-in 0.4s ease-out forwards;
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .animate-slide-up {
-  animation: slide-up 0.5s ease-out forwards;
+  animation: slide-up 0.4s ease-out forwards;
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 10px -5px var(--primary); }
-  50% { box-shadow: 0 0 20px 0px var(--primary); }
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 16px -4px var(--primary); }
 }
-
 .animate-pulse-glow {
-  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-
-/*
-Original Animations
-*/
 
 @keyframes flash {
-  0%,
-  100% {
-    background-color: transparent;
-  }
-  50% {
-    background-color: rgb(59 130 246 / 0.3);
-  }
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(212, 149, 106, 0.15); }
 }
-
 .animate-flash {
   animation: flash 1s ease-in-out;
 }
 
 @keyframes thinking-gradient {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
-
 .animate-thinking-gradient {
-  /* Fallback */
-  background: linear-gradient(90deg, #666 0%, #bbb 50%, #666 100%);
-  /* Preferred (overrides when supported) */
-  background: linear-gradient(
-    90deg,
-    oklch(0.14 0 0) 0%,
-    oklch(0.7 0 0) 50%,
-    oklch(0.14 0 0) 100%
-  );
+  background: linear-gradient(90deg, var(--muted-foreground) 0%, var(--foreground) 50%, var(--muted-foreground) 100%);
   background-size: 200% 100%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: thinking-gradient 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) skewX(-12deg); }
+  100% { transform: translateX(200%) skewX(-12deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  30% { transform: translate(3%, -15%); }
+  50% { transform: translate(12%, 9%); }
+  70% { transform: translate(9%, 4%); }
+  90% { transform: translate(-1%, 7%); }
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════ */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.grain-overlay::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .grain-overlay::before {
+  opacity: 0;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--foreground) 0%, var(--muted-foreground) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.border-subtle {
+  border-color: rgba(128, 128, 128, 0.1);
+}
+
+.dark .border-subtle {
+  border-color: rgba(255, 255, 255, 0.06);
 }

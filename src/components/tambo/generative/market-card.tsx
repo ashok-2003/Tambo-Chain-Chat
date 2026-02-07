@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Activity } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { coingeckoService, CoinGeckoMarketData } from "@/services/coingecko";
@@ -32,26 +32,29 @@ export function MarketSnapshotCard({ symbol }: MarketCardProps) {
             }
         }
 
-        if (symbol) {
-            fetchData();
-        }
-
+        if (symbol) fetchData();
         return () => { mounted = false; };
     }, [symbol]);
 
     if (loading) {
         return (
-            <div className="w-64 p-4 rounded-xl border bg-card/50 animate-pulse">
-                <div className="h-6 w-24 bg-muted rounded mb-4"></div>
-                <div className="h-8 w-32 bg-muted rounded mb-2"></div>
-                <div className="h-4 w-16 bg-muted rounded"></div>
+            <div className="w-72 p-5 rounded-xl border border-border bg-card animate-pulse">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="h-8 w-8 bg-muted rounded-full" />
+                    <div className="h-5 w-24 bg-muted rounded" />
+                </div>
+                <div className="h-8 w-36 bg-muted rounded mb-4" />
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="h-10 bg-muted rounded" />
+                    <div className="h-10 bg-muted rounded" />
+                </div>
             </div>
         );
     }
 
     if (!data) {
         return (
-            <div className="w-64 p-4 rounded-xl border border-destructive/30 bg-destructive/10">
+            <div className="w-72 p-5 rounded-xl border border-destructive/20 bg-card">
                 <div className="text-sm text-destructive">Could not load data for {symbol}</div>
             </div>
         );
@@ -60,33 +63,41 @@ export function MarketSnapshotCard({ symbol }: MarketCardProps) {
     const isPositive = data.price_change_percentage_24h >= 0;
 
     return (
-        <div className="w-64 p-4 rounded-xl border bg-linear-to-br from-card to-card/50 shadow-lg hover:shadow-xl transition-all duration-300 group">
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                    {data.image && <img src={data.image} alt={data.name} className="w-6 h-6 rounded-full" />}
-                    <span className="font-semibold text-lg">{data.name}</span>
-                    <span className="text-xs text-muted-foreground uppercase">{data.symbol}</span>
+        <div className="w-72 p-5 rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                    {data.image && <img src={data.image} alt={data.name} className="w-7 h-7 rounded-full" />}
+                    <div>
+                        <span className="font-semibold text-sm text-foreground">{data.name}</span>
+                        <span className="text-xs text-muted-foreground uppercase ml-1.5">{data.symbol}</span>
+                    </div>
                 </div>
-                <div className={cn("flex items-center text-xs font-medium px-2 py-1 rounded-full", isPositive ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500")}>
-                    {isPositive ? <ArrowUp className="w-3 h-3 mr-1" /> : <ArrowDown className="w-3 h-3 mr-1" />}
+                <div className={cn(
+                    "flex items-center gap-0.5 text-xs font-mono font-semibold px-2 py-1 rounded-md",
+                    isPositive ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-500"
+                )}>
+                    {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                     {Math.abs(data.price_change_percentage_24h).toFixed(2)}%
                 </div>
             </div>
 
-            <div className="mb-4">
-                <div className="text-2xl font-bold tracking-tight">
+            {/* Price */}
+            <div className="mb-5">
+                <div className="text-2xl font-bold font-mono tracking-tight">
                     ${data.current_price.toLocaleString()}
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                 <div>
-                    <div className="mb-0.5">Market Cap</div>
-                    <div className="font-medium text-foreground">${(data.market_cap / 1e9).toFixed(2)}B</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Mkt Cap</div>
+                    <div className="text-sm font-mono font-medium text-foreground">${(data.market_cap / 1e9).toFixed(2)}B</div>
                 </div>
                 <div>
-                    <div className="mb-0.5">Volume (24h)</div>
-                    <div className="font-medium text-foreground">${(data.total_volume / 1e6).toFixed(0)}M</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Vol 24h</div>
+                    <div className="text-sm font-mono font-medium text-foreground">${(data.total_volume / 1e6).toFixed(0)}M</div>
                 </div>
             </div>
         </div>

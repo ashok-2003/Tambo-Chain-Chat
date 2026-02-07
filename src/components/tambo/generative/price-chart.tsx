@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { z } from "zod";
 import { Activity } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { coingeckoService } from "@/services/coingecko";
 
 export const priceChartSchema = z.object({
@@ -15,11 +14,6 @@ export const priceChartSchema = z.object({
 
 export type PriceChartProps = z.infer<typeof priceChartSchema>;
 
-interface ChartDataPoint {
-    date: string;
-    [key: string]: number | string;
-}
-
 export function PriceChart({ tokens = [], timeframe = "7", title }: PriceChartProps) {
     const fetchPriceHistory = async () => {
         const promises = tokens.map(token => coingeckoService.getPriceHistory(token, timeframe));
@@ -29,16 +23,13 @@ export function PriceChart({ tokens = [], timeframe = "7", title }: PriceChartPr
             throw new Error("Failed to fetch data for all tokens");
         }
 
-        // Process data
         const timestampMap = new Map<number, { [key: string]: number }>();
 
         results.forEach((res, index) => {
             if (!res) return;
             const tokenName = tokens[index];
             res.prices.forEach(([timestamp, price]) => {
-                // Round timestamp to nearest hour/day to align slightly off data
                 const alignedTime = Math.floor(timestamp / 1000 / 60 / 60) * 1000 * 60 * 60;
-
                 const existing = timestampMap.get(alignedTime) || {};
                 timestampMap.set(alignedTime, { ...existing, [tokenName]: price });
             });
@@ -59,101 +50,103 @@ export function PriceChart({ tokens = [], timeframe = "7", title }: PriceChartPr
         refetchOnWindowFocus: false,
     });
 
-
     if (loading) {
         return (
-            <div className="w-full h-[360px] flex flex-col items-center justify-center bg-muted/20 rounded-xl border border-border/40 animate-pulse relative overflow-hidden">
-                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent skew-x-12 -translate-x-full animate-[shimmer_2s_infinite]" />
-                <Activity className="w-8 h-8 text-muted-foreground/50 mb-3 animate-bounce" />
-                <div className="text-sm font-medium text-muted-foreground">Analyzing market data...</div>
+            <div className="w-full h-[360px] flex flex-col items-center justify-center bg-muted/20 rounded-xl border border-border animate-pulse relative overflow-hidden">
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-muted/10 to-transparent skew-x-12 -translate-x-full animate-[shimmer_2s_infinite]" />
+                <Activity className="w-6 h-6 text-muted-foreground/40 mb-3" />
+                <div className="text-xs font-medium text-muted-foreground font-mono tracking-wide">LOADING MARKET DATA...</div>
             </div>
         );
     }
 
     if (isError || (chartData.length === 0 && !loading)) {
         return (
-            <div className="w-full h-[360px] flex flex-col items-center justify-center bg-muted/10 rounded-xl border border-destructive/20 text-center p-6">
-                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
-                    <Activity className="w-6 h-6 text-destructive" />
+            <div className="w-full h-[360px] flex flex-col items-center justify-center bg-card rounded-xl border border-border text-center p-6">
+                <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center mb-3">
+                    <Activity className="w-5 h-5 text-destructive" />
                 </div>
-                <h4 className="font-semibold text-foreground mb-1">Data Unavailable</h4>
-                <p className="text-sm text-muted-foreground">
+                <h4 className="font-semibold text-sm text-foreground mb-1">Data Unavailable</h4>
+                <p className="text-xs text-muted-foreground max-w-xs">
                     {(error as Error)?.message || "Could not fetch price history for these tokens."}
                 </p>
             </div>
         );
     }
 
-    const colors = ["#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#3b82f6"];
+    const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+    const rawColors = ["#d4956a", "#60a5fa", "#a78bfa", "#34d399", "#fbbf24"];
 
     return (
-        <div className="w-full p-6 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-xl">
-            <div className="flex justify-between items-center mb-6">
+        <div className="w-full p-6 rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h3 className="font-bold text-lg leading-none mb-1">{title || `Market Performance`}</h3>
-                    <p className="text-xs text-muted-foreground">Last {timeframe} days history</p>
+                    <h3 className="font-semibold text-base leading-none mb-1.5">{title || "Market Performance"}</h3>
+                    <p className="text-xs text-muted-foreground font-mono">{timeframe}D HISTORY</p>
                 </div>
                 <div className="flex gap-2">
                     {tokens.map((t, i) => (
-                        <div key={t} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border/50 text-xs font-medium transition-colors hover:bg-muted">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                        <div key={t} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50 text-xs font-medium">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: rawColors[i % rawColors.length] }} />
                             <span className="capitalize">{t}</span>
                         </div>
                     ))}
                 </div>
             </div>
-            <div className="h-[300px] w-full">
+            <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                         <defs>
                             {tokens.map((token, index) => (
                                 <linearGradient key={token} id={`color-${token}`} x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={colors[index % colors.length]} stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor={colors[index % colors.length]} stopOpacity={0} />
+                                    <stop offset="5%" stopColor={rawColors[index % rawColors.length]} stopOpacity={0.15} />
+                                    <stop offset="95%" stopColor={rawColors[index % rawColors.length]} stopOpacity={0} />
                                 </linearGradient>
                             ))}
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.1} vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
                         <XAxis
                             dataKey="date"
-                            fontSize={11}
+                            fontSize={10}
                             tickLine={false}
                             axisLine={false}
                             minTickGap={40}
-                            tick={{ fill: 'var(--muted-foreground)' }}
+                            tick={{ fill: 'var(--muted-foreground)', fontFamily: 'var(--font-mono)' }}
                             dy={10}
                         />
                         <YAxis
                             domain={['auto', 'auto']}
-                            fontSize={11}
+                            fontSize={10}
                             tickLine={false}
                             axisLine={false}
                             tickFormatter={(val) => `$${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                            tick={{ fill: 'var(--muted-foreground)' }}
+                            tick={{ fill: 'var(--muted-foreground)', fontFamily: 'var(--font-mono)' }}
                         />
                         <Tooltip
                             contentStyle={{
-                                borderRadius: "12px",
+                                borderRadius: "8px",
                                 border: "1px solid var(--border)",
                                 backgroundColor: "var(--popover)",
                                 color: "var(--popover-foreground)",
-                                boxShadow: "0 10px 30px -10px rgba(0,0,0,0.5)"
+                                boxShadow: "0 4px 16px -4px rgba(0,0,0,0.2)",
+                                fontSize: "12px",
+                                fontFamily: "var(--font-mono)",
                             }}
-                            itemStyle={{ fontSize: "12px", fontWeight: 500 }}
-                            labelStyle={{ color: "var(--muted-foreground)", fontSize: "11px", marginBottom: "4px" }}
-                            cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 4", opacity: 0.5 }}
+                            itemStyle={{ fontSize: "11px", fontWeight: 500 }}
+                            labelStyle={{ color: "var(--muted-foreground)", fontSize: "10px", marginBottom: "4px" }}
+                            cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 4", opacity: 0.3 }}
                         />
                         {tokens.map((token, index) => (
                             <Area
                                 key={token}
                                 type="monotone"
                                 dataKey={token}
-                                stroke={colors[index % colors.length]}
-                                strokeWidth={2}
+                                stroke={rawColors[index % rawColors.length]}
+                                strokeWidth={1.5}
                                 fillOpacity={1}
                                 fill={`url(#color-${token})`}
-                                activeDot={{ r: 4, strokeWidth: 0, fill: colors[index % colors.length] }}
-                                animationDuration={1500}
+                                activeDot={{ r: 3, strokeWidth: 0, fill: rawColors[index % rawColors.length] }}
+                                animationDuration={1200}
                                 animationEasing="ease-out"
                             />
                         ))}

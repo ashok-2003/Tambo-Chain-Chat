@@ -11,54 +11,52 @@ export const riskGaugeSchema = z.object({
 export type RiskGaugeProps = z.infer<typeof riskGaugeSchema>;
 
 export function RiskGauge({ score, label = "Risk Analysis" }: RiskGaugeProps) {
-    // Normalize score
     const clampedScore = Math.min(100, Math.max(0, score));
 
-    // Determine color zone
-    let colorClass = "text-green-500";
-    let bgClass = "bg-green-500";
+    let colorClass = "text-emerald-600 dark:text-emerald-400";
+    let barColor = "bg-emerald-500";
     let statusText = "Low Risk";
+    let statusBg = "bg-emerald-500/10";
 
     if (clampedScore > 35) {
-        colorClass = "text-yellow-500";
-        bgClass = "bg-yellow-500";
+        colorClass = "text-amber-600 dark:text-amber-400";
+        barColor = "bg-amber-500";
         statusText = "Medium Risk";
+        statusBg = "bg-amber-500/10";
     }
     if (clampedScore > 70) {
         colorClass = "text-red-500";
-        bgClass = "bg-red-500";
+        barColor = "bg-red-500";
         statusText = "High Risk";
+        statusBg = "bg-red-500/10";
     }
 
-    // Calculate rotation for needle/bar
-    // For a semi-circle gauge (-90deg to 90deg)
     const rotation = (clampedScore / 100) * 180 - 90;
 
     return (
-        <div className="w-full max-w-xs p-4 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col items-center">
-            <h3 className="font-semibold text-sm text-muted-foreground mb-4 uppercase tracking-wider">{label}</h3>
+        <div className="w-full max-w-xs p-5 rounded-xl border border-border bg-card shadow-sm flex flex-col items-center">
+            <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.15em] mb-5">{label}</div>
 
-            <div className="relative w-48 h-24 overflow-hidden mb-2">
-                {/* Background Arc */}
-                <div className="absolute bottom-0 left-0 w-full h-full bg-muted rounded-t-full"></div>
-
-                {/* Colored Zones (Simplified as gradient or segments) */}
-                <div className="absolute bottom-0 left-0 w-full h-full rounded-t-full opacity-20 bg-linear-to-r from-green-500 via-yellow-500 to-red-500"></div>
+            {/* Gauge */}
+            <div className="relative w-44 h-22 overflow-hidden mb-3">
+                <div className="absolute bottom-0 left-0 w-full h-full bg-muted/50 rounded-t-full" />
+                <div className="absolute bottom-0 left-0 w-full h-full rounded-t-full opacity-15 bg-linear-to-r from-emerald-500 via-amber-500 to-red-500" />
 
                 {/* Needle */}
                 <div
-                    className="absolute bottom-0 left-1/2 w-1 h-[90%] bg-foreground origin-bottom transition-transform duration-1000 ease-out"
+                    className="absolute bottom-0 left-1/2 w-0.5 h-[88%] bg-foreground/80 origin-bottom transition-transform duration-1000 ease-out"
                     style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
                 >
-                    <div className="w-4 h-4 rounded-full bg-foreground absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 shadow-lg"></div>
+                    <div className="w-3 h-3 rounded-full bg-foreground absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 shadow-sm" />
                 </div>
             </div>
 
+            {/* Score */}
             <div className="text-center">
-                <div className={cn("text-3xl font-bold font-mono leading-none mb-1", colorClass)}>
+                <div className={cn("text-3xl font-bold font-mono leading-none mb-2", colorClass)}>
                     {clampedScore}
                 </div>
-                <div className="text-sm font-medium text-muted-foreground">
+                <div className={cn("inline-flex px-2.5 py-1 rounded-md text-xs font-semibold", statusBg, colorClass)}>
                     {statusText}
                 </div>
             </div>
