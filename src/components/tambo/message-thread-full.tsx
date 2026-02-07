@@ -18,7 +18,7 @@ import {
   MessageSuggestionsStatus,
 } from "@/components/tambo/message-suggestions";
 import { ScrollableMessageContainer } from "@/components/tambo/scrollable-message-container";
-import { MessageInputMcpConfigButton } from "@/components/tambo/message-input";
+
 import { ChatExportMenu } from "@/components/tambo/chat-export";
 import { ThreadContainer, useThreadContainerContext } from "./thread-container";
 import {
@@ -109,8 +109,6 @@ export const MessageThreadFull = React.forwardRef<
               <MessageInputMcpPromptButton />
               <MessageInputMcpResourceButton />
               <MessageInputDictationButton />
-              {/* Uncomment this to enable client-side MCP config modal button */}
-              <MessageInputMcpConfigButton />
               <MessageInputSubmitButton />
             </MessageInputToolbar>
             <MessageInputError />
