@@ -2,49 +2,66 @@
 import { TamboTool } from "@tambo-ai/react";
 import { z } from "zod";
 
-// Mock news data for demonstration/fallback
-const MOCK_NEWS = [
-    {
-        title: "Bitcoin Surges Past Key Resistance Level",
-        domain: "coindesk.com",
-        url: "https://www.coindesk.com/market/2024/02/10/bitcoin-surges",
-        published_at: new Date().toISOString(),
-    },
-    {
-        title: "Ethereum Upgrade scheduled for next month",
-        domain: "decrypt.co",
-        url: "https://decrypt.co/news/ethereum-upgrade",
-        published_at: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    },
-    {
-        title: "Solana DeFi Volume Hits Record High",
-        domain: "blockworks.co",
-        url: "https://blockworks.co/news/solana-defi-record",
-        published_at: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    },
-    {
-        title: "Regulatory Clarity improves for Crypto Markets",
-        domain: "bloomberg.com",
-        url: "https://www.bloomberg.com/crypto/news",
-        published_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    },
-];
+// Interface for the API response item
+interface CryptoCompareNewsItem {
+    id: string;
+    guid: string;
+    published_on: number;
+    imageurl: string;
+    title: string;
+    url: string;
+    body: string;
+    tags: string;
+    lang: string;
+    upvotes: string;
+    downvotes: string;
+    categories: string;
+    source_info: {
+        name: string;
+        img: string;
+        lang: string;
+    };
+    source: string;
+}
 
 export const fetchCryptoNews = async ({ topic }: { topic?: string }) => {
-    // In a production app, you would call a real API here like CryptoPanic or NewsAPI
-    // const response = await fetch(`https://cryptopanic.com/api/v1/posts/?auth_token=YOUR_KEY&filter=${topic}`);
+    try {
+        console.log(`Fetching news for topic: ${topic || "general"}`);
 
-    console.log(`Fetching news for topic: ${topic || "general"}`);
+        // Fetch from CryptoCompare public API
+        const response = await fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN");
 
-    // Return mock data for reliable demo experience without API keys
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+        if (!response.ok) {
+            throw new Error(`News API responded with status: ${response.status}`);
+        }
 
-    if (topic) {
-        // rudimentary filter for mock
-        return MOCK_NEWS.filter(n => n.title.toLowerCase().includes(topic.toLowerCase()) || !topic);
+        const data = await response.json();
+        const newsItems: CryptoCompareNewsItem[] = data.Data || [];
+
+        // Map to our desired format
+        const formattedNews = newsItems.map((item) => ({
+            title: item.title,
+            domain: item.source_info?.name || item.source,
+            url: item.url,
+            published_at: new Date(item.published_on * 1000).toISOString(),
+            // Adding body snippet could be useful for context if needed later
+            // snippet: item.body.substring(0, 150) + "..."
+        }));
+
+        if (topic) {
+            const lowerTopic = topic.toLowerCase();
+            // Filter locally since the public API endpoint doesn't support granular arbitrary query
+            return formattedNews.filter(
+                (n) => n.title.toLowerCase().includes(lowerTopic) ||
+                    (n.domain && n.domain.toLowerCase().includes(lowerTopic))
+            );
+        }
+
+        return formattedNews.slice(0, 20); // Return top 20 items to avoid overwhelming context
+    } catch (error) {
+        console.error("Error fetching crypto news:", error);
+        return []; // Return empty array on failure to be graceful
     }
-    return MOCK_NEWS;
 };
 
 export const newsTool: TamboTool = {
