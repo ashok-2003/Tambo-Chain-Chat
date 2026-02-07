@@ -59,9 +59,14 @@ export function DemoChat() {
                         <div className="h-2.5 w-2.5 rounded-full bg-amber-400/60 dark:bg-amber-400/40" />
                         <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/60 dark:bg-emerald-400/40" />
                     </div>
-                    <span className="text-[10px] font-mono font-medium text-muted-foreground uppercase tracking-[0.2em]">
-                        chainchat terminal
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-4 h-4 rounded overflow-hidden">
+                            <img src="/logos/Gemini_Generated_Image_m8vxwvm8vxwvm8vx.svg" alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <span className="text-[10px] font-mono font-medium text-muted-foreground uppercase tracking-[0.2em]">
+                            chainchat
+                        </span>
+                    </div>
                     <div className="w-16" />
                 </div>
 

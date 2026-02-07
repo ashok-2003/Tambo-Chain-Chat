@@ -11,8 +11,12 @@ export function Header() {
             {/* Left: Logo & Market */}
             <div className="flex items-center gap-5">
                 <a href="/" className="flex items-center gap-2.5 group">
-                    <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
-                        <span className="text-primary-foreground font-bold text-sm leading-none">C</span>
+                    <div className="w-7 h-7 rounded-lg overflow-hidden transition-transform duration-200 group-hover:scale-105">
+                        <img
+                            src="/logos/Gemini_Generated_Image_m8vxwvm8vxwvm8vx.svg"
+                            alt="ChainChat"
+                            className="w-full h-full object-cover"
+                        />
                     </div>
                     <span className="text-sm font-semibold tracking-[-0.01em] text-foreground">
                         ChainChat
@@ -27,10 +31,10 @@ export function Header() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
-                <button className="relative p-2 rounded-lg hover:bg-muted transition-colors group">
+                {/* <button className="relative p-2 rounded-lg hover:bg-muted transition-colors group">
                     <Bell className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                     <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
-                </button>
+                </button> */}
 
                 <ConnectButton />
 

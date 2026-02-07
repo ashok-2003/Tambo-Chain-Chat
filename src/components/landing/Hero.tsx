@@ -11,6 +11,17 @@ export function Hero() {
             </div>
 
             <div className="space-y-8 animate-fade-in">
+                {/* Logo */}
+                <div className="flex justify-center">
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden shadow-lg shadow-primary/10">
+                        <img
+                            src="/logos/Gemini_Generated_Image_umerc3umerc3umer.svg"
+                            alt="ChainChat"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                </div>
+
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/50 text-xs font-medium tracking-wide text-muted-foreground backdrop-blur-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
