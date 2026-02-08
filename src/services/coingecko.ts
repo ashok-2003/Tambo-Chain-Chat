@@ -94,6 +94,32 @@ export const coingeckoService = {
         }
     },
 
+    async getOHLC(id: string, days: string = "7"): Promise<[number, number, number, number, number][] | null> {
+        const cacheKey = `ohlc-${id}-${days}`;
+        const cached = cache.get(cacheKey);
+
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+            return cached.data;
+        }
+
+        try {
+            const response = await fetch(
+                `${BASE_URL}/coins/${id}/ohlc?vs_currency=usd&days=${days}`
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch OHLC data");
+            }
+
+            const data = await response.json();
+            cache.set(cacheKey, { data, timestamp: Date.now() });
+            return data;
+        } catch (error) {
+            console.error("CoinGecko API Error:", error);
+            return null;
+        }
+    },
+
     async searchCoins(query: string): Promise<{ id: string; name: string; symbol: string; thumb: string }[]> {
         if (!query || query.length < 2) return [];
 

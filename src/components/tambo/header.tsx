@@ -7,21 +7,18 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export function Header() {
     return (
-        <header className="w-full h-14 border-b border-border bg-background/90 backdrop-blur-xl sticky top-0 z-50 flex items-center justify-between px-5 transition-all duration-200">
-            {/* Left: Logo & Market */}
-            <div className="flex items-center gap-5">
-                <a href="/" className="flex items-center gap-2.5 group">
-                    <div className="w-10 h-6 rounded-sm overflow-hidden transition-transform duration-200 group-hover:scale-105">
-                        <img
-                            src="/logos/Gemini_Generated_Image_m8vxwvm8vxwvm8vx.svg"
-                            alt="ChainChat"
-                            className="w-full h-full object-cover"
-                        />
+        <header className="w-full h-16 border-b border-border/40 bg-background/80 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-6 transition-all duration-300 print:hidden">
+            {/* Left Zone: Logo & Status */}
+            <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-2 group cursor-pointer">
+                    <div className="relative w-8 h-8 rounded-lg bg-linear-to-tr from-primary to-purple-600 flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.5)] group-hover:shadow-[0_0_25px_rgba(var(--primary),0.7)] transition-all duration-300">
+                        <span className="text-white font-bold text-lg">C</span>
+                        <div className="absolute inset-0 bg-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     {/* <span className="text-sm font-semibold tracking-[-0.01em] text-foreground">
                         ChainChat
                     </span> */}
-                </a>
+                </div>
 
                 <div className="hidden md:flex items-center">
                     <div className="w-px h-5 bg-border mr-5" />
